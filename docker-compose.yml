@@ -1,0 +1,61 @@
+version: "3.9"
+
+volumes:
+  pg-dataset:
+
+services:
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - .:/docker-entrypoint-initdb.d
+      - .:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: b7Mg4UmK
+      PGDATA: '/var/lib/postgresql/data/pgdata'
+
+  marketprice:
+    build: ./marketprice
+    env_file:
+      - marketprice/.env
+    volumes:
+      - ./marketprice:/var/marketprice/www
+    ports:
+      - "3000:3000"
+    networks:
+      - main-networks
+    restart: always
+    command: npm start
+
+  matchengine:
+    build: ./matchengine
+    env_file:
+      - matchengine/.env
+    volumes:
+      - ./matchengine:/var/matchengine/www
+    ports:
+      - "3001:3001"
+    networks:
+      - main-networks
+    restart: always
+    command: npm start
+
+  readhistory:
+    build: ./readhistory
+    env_file:
+      - readhistory/.env
+    volumes:
+      - ./readhistory:/var/readhistory/www
+    ports:
+      - "3002:3002"
+    networks:
+      - main-networks
+    restart: always
+    command: npm start
+
+networks:
+  main-networks:
+    driver: bridge
+  
