@@ -1,20 +1,18 @@
 version: "3.9"
 
-volumes:
-  pg-dataset:
-
 services:
   postgres:
     image: postgres
     ports:
       - "5432:5432"
     volumes:
-      - .:/docker-entrypoint-initdb.d
-      - .:/var/lib/postgresql/data
+      - ./postgres:/docker-entrypoint-initdb.d
+      - ./postgres:/var/lib/postgresql/data
     environment:
+      POSTGRES_DB: exchange_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: b7Mg4UmK
-      PGDATA: '/var/lib/postgresql/data/pgdata'
+      PGDATA: '/var/postgresql/data/pgdata'
 
   marketprice:
     build: ./marketprice
@@ -55,6 +53,8 @@ services:
     restart: always
     command: npm run dev
 
+volumes:
+  pg-dataset:
 networks:
   main-networks:
     driver: bridge
