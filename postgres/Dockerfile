@@ -1,7 +1,7 @@
 FROM postgres
 RUN apk --no-cache add mariadb mariadb-client
 
-VOLUME /var/lib/postgres
+VOLUME /var/postgres
 EXPOSE 5432
 
 RUN mkdir /docker-entrypoint-initdb.d
