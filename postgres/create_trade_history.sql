@@ -70,7 +70,7 @@ CREATE TABLE order_history (
 
 CREATE TABLE balance_history (
     "id"             SERIAL NOT NULL PRIMARY KEY,
-    "time"           TIME NOT NULL,
+    "time"           TIMESTAMP NOT NULL,
     "user_id"        SERIAL NOT NULL,
     "asset"          VARCHAR(4) NOT NULL,
     "business"       VARCHAR(30) NOT NULL,
