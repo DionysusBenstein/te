@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node -r dotenv/config dist/ .",
     "dev:build": "tsc --watch",
-    "dev:start": "nodemon -r dotenv/config dist/ .",
+    "dev:start": "nodemon -L -r dotenv/config dist/ .",
     "dev": "npm-run-all --parallel dev:*"
   },
   "author": "",
@@ -21,6 +21,8 @@
   "dependencies": {
     "@types/express": "^4.17.13",
     "express": "^4.17.2",
+    "jayson": "^3.6.6",
+    "loadash": "^1.0.0",
     "mongoose": "^6.2.2",
     "pg": "^8.7.3"
   }
