@@ -1,23 +1,5 @@
-import { Client, HttpClientOptions } from "jayson";
-
-const env = process.env;
-
-const services = {
-  marketprice: {
-    host: env.MARKET_PRICE_HOST || "localhost",
-    port: env.MARKET_PRICE_PORT || 3000,
-  },
-  matchengine: {
-    host: env.MATCH_ENGINE_HOST || "localhost",
-    port: env.MATCH_ENGINE_PORT || 3001,
-  },
-  readhistory: {
-    host: env.READ_HISTORY_HOST || "localhost",
-    port: env.READ_HISTORY_PORT || 3002,
-  },
-};
-
-const redirect = (service: HttpClientOptions) => Client.http(service);
+import { services } from "./constants/services.constant";
+import { redirect } from "./util/redirect.util";
 
 export const redirects = {
   balance: {
@@ -29,4 +11,15 @@ export const redirects = {
     list: redirect(services.matchengine),
     summary: redirect(services.matchengine),
   },
-};
+  order: {
+    put_limit: redirect(services.matchengine),
+    put_market: redirect(services.matchengine),
+    cancel: redirect(services.matchengine),
+    deals: redirect(services.readhistory),
+    book: redirect(services.matchengine),
+    depth: redirect(services.matchengine),
+    pending: redirect(services.matchengine),
+    finished: redirect(services.readhistory),
+    finished_detail: redirect(services.readhistory),
+  },
+} as const;
