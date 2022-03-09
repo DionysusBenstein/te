@@ -22,4 +22,14 @@ export const redirects = {
     finished: redirect(services.readhistory),
     finished_detail: redirect(services.readhistory),
   },
+  market: {
+    last: redirect(services.marketprice),
+    deals: redirect(services.marketprice),
+    user_deals: redirect(services.readhistory),
+    kline: redirect(services.marketprice),
+    status: redirect(services.marketprice),
+    status_today: redirect(services.marketprice),
+    list: redirect(services.matchengine),
+    summary: redirect(services.matchengine),
+  },
 } as const;
