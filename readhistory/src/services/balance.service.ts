@@ -2,7 +2,8 @@ import _ from "lodash";
 import { QueryResult } from "pg";
 import { pool } from "../config/database.config";
 import { BalanceHistoryParams } from "../dto/balance-history-params.dto";
-import { generateSqlCriteria } from "../utils/generate-query-string.util";
+import { betweenDateQuery } from "../utils/between-date-query.util";
+import { fieldMatch } from "../utils/fields-match.util";
 
 class BalanceService {
   async getHistory({
@@ -12,20 +13,15 @@ class BalanceService {
     end_time,
     ...params
   }: BalanceHistoryParams) {
+    const timeBetween = betweenDateQuery("time", start_time, end_time, true);
+
     const queryString = `
-       SELECT * FROM balance_history WHERE ${generateSqlCriteria(
+       SELECT * FROM balance_history WHERE ${fieldMatch(
          params
-       )} LIMIT ${limit} OFFSET ${offset};
+       )} ${timeBetween} LIMIT ${limit} OFFSET ${offset};
     `;
 
-    console.log(queryString);
-
-    const { rows }: QueryResult = await pool.query(
-      queryString,
-      _.values(params)
-    );
-
-    console.log(rows);
+    const { rows }: QueryResult = await pool.query(queryString);
 
     return rows;
   }

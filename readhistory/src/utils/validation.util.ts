@@ -9,19 +9,24 @@ interface ValidationResult {
 
 export async function validateAndConvert(
   classToConvert: any,
-  body: Object
+  body: any
 ): Promise<ValidationResult> {
   const result: ValidationResult = {};
-  result.data = plainToClass(classToConvert, body);
-  const errors = await validate(result.data, { forbidNonWhitelisted: true });
+  result.data = plainToClass(classToConvert, body, {
+    excludeExtraneousValues: true,
+    strategy: "exposeAll",
+  });
+  console.log(result.data);
+
+  const errors = await validate(result.data as any, {
+    forbidNonWhitelisted: true,
+  });
 
   if (errors.length > 0) {
     const errorTexts = errors.map((error) => ({
       key: error.property,
       error: _.values(error.constraints),
     }));
-
-    console.log(errorTexts);
 
     result.errors = errorTexts;
   }

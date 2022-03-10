@@ -4,7 +4,6 @@ import _ from "lodash";
 import jayson from "jayson";
 import { methods } from "./rpc";
 import { collapse } from "./utils/rpc.utils";
-import { generateSqlCriteria } from "./utils/generate-query-string.util";
 
 const app = express();
 const port = process.env.PORT || 3002;

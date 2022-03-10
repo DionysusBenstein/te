@@ -4,32 +4,29 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  Length,
   Min,
   IsPositive,
   Validate,
+  IsEnum,
 } from "class-validator";
 import { IsZeroOrDateValidation } from "../shared/decorators/is-zero-or-date.decorator";
+import { SideEnum } from "../typings/enums/side.enum";
 import { tranformZeroOrDate } from "../utils/date-tranformer.util";
 
-export class BalanceHistoryParams {
-  @IsInt()
+export class OrderFinishedParams {
   @Expose()
+  @IsInt()
   @IsPositive()
   user_id: number;
 
   @Expose()
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @Length(1, 4)
-  asset?: string;
+  market: string;
 
   @Expose()
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  business?: string;
+  @IsEnum(SideEnum)
+  side: SideEnum;
 
   @Expose()
   @Validate(IsZeroOrDateValidation)

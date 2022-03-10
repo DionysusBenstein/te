@@ -1,56 +1,38 @@
 import balanceController from "./controllers/balance.controller";
+import marketController from "./controllers/market.controller";
+import orderController from "./controllers/order.controller";
 import { BalanceHistoryParams } from "./dto/balance-history-params.dto";
+import { FinishedDetailParams } from "./dto/finished-detail-params.dto";
+import { MarketUserDealsParams } from "./dto/market-user-deals-params.dto";
+import { OrderDealsParams } from "./dto/order-deals-params.dto";
+import { OrderFinishedParams } from "./dto/order-finished-params.dto";
+import marketService from "./services/market.service";
 import { validateAndConvert } from "./utils/validation.util";
 
 export const methods = {
   balance: {
     async history(args: BalanceHistoryParams, callback) {
-      const response = {
-        message: "balance.history is working!",
-        result: await balanceController.history(args),
-      };
-
-      callback(null, response);
+      callback(null, await balanceController.history(args));
     },
   },
 
   order: {
-    async deals(args, callback) {
-      const response = {
-        message: "order.deals is working!",
-        args,
-      };
-
-      callback(null, response);
+    async deals(args: OrderDealsParams, callback) {
+      callback(null, await orderController.deals(args));
     },
 
-    async finished(args, callback) {
-      const response = {
-        message: "order.finished is working!",
-        args,
-      };
-
-      callback(null, response);
+    async finished(args: OrderFinishedParams, callback) {
+      callback(null, await orderController.finished(args));
     },
 
-    async finished_detail(args, callback) {
-      const response = {
-        message: "order.finished_detail is working!",
-        args,
-      };
-
-      callback(null, response);
+    async finished_detail(args: FinishedDetailParams, callback) {
+      callback(null, await orderController.finished_detail(args));
     },
   },
 
   market: {
-    async user_deals(args, callback) {
-      const response = {
-        message: "market.user_deals is working!",
-        args,
-      };
-
-      callback(null, response);
+    async user_deals(args: MarketUserDealsParams, callback) {
+      callback(null, await marketController.user_deals(args));
     },
   },
 };
