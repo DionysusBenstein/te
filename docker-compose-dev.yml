@@ -60,9 +60,24 @@ services:
     restart: always
     command: npm run dev
 
+  router:
+    container_name: router
+    build: ./router
+    env_file:
+      - readhistory/.env
+    volumes:
+      - ./router:/usr/src/router
+      - /usr/src/router/node_modules
+    ports:
+      - "3003:3003"
+    networks:
+      - main-networks
+    restart: always
+    command: npm run dev
+
+
 volumes:
   pg-dataset:
 networks:
   main-networks:
     driver: bridge
-  
