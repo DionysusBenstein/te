@@ -1,6 +1,15 @@
 version: "3.9"
 
 services:
+  redis:
+    image: redis
+    container_name: redis
+    restart: unless-stopped
+    network_mode: bridge
+    volumes: 
+      - ./redis:/data
+    ports: 
+      - "6379:6379"
   postgres:
     container_name: postgres
     image: postgres
