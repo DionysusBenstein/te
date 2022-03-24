@@ -1,48 +1,34 @@
+import { MarketStatusTodayParams } from "./dto/market-status-today-params.dto";
+import { MarketLastParams } from "./dto/market-last-params.dto";
+import { MarketDealsParams } from "./dto/market-deals-params.dto";
+import { MarketStatusParams } from "./dto/market-status-params.dto";
+import marketController from "./controllers/market.controller";
+
 export const methods = {
-    market: {
-        async last(args, callback) {
-            const response = {
-                message: 'market.last is working!',
-                args
-            };
+  market: {
+    async last(args: MarketLastParams, callback) {
+      callback(null, await marketController.last(args));
+    },
 
-            callback(null, response);
-        },
+    async deals(args: MarketDealsParams, callback) {
+      callback(null, await marketController.deals(args));
+    },
 
-        async deals(args, callback) {
-            const response = {
-                message: 'market.deals is working!',
-                args
-            };
+    async kline(args, callback) {
+      const response = {
+        message: "market.kline is working!",
+        args,
+      };
 
-            callback(null, response);
-        },
+      callback(null, response);
+    },
 
-        async kline(args, callback) {
-            const response = {
-                message: 'market.kline is working!',
-                args
-            };
+    async status(args: MarketStatusParams, callback) {
+      callback(null, await marketController.status(args));
+    },
 
-            callback(null, response);
-        },
-
-        async status(args, callback) {
-            const response = {
-                message: 'market.status is working!',
-                args
-            };
-
-            callback(null, response);
-        },
-
-        async status_today(args, callback) {
-            const response = {
-                message: 'market.status_today is working!',
-                args
-            };
-
-            callback(null, response);
-        }
-    }
-}
+    async status_today(args: MarketStatusTodayParams, callback) {
+      callback(null, await marketController.status_today(args));
+    },
+  },
+};
