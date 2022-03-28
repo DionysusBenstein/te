@@ -1,18 +1,19 @@
 import { MarketStatusTodayParams } from "./../dto/market-status-today-params.dto";
 import { MarketStatusParams } from "./../dto/market-status-params.dto";
 import { MarketDealsParams } from "./../dto/market-deals-params.dto";
-import client from "../config/database.config";
+import redisClient from "../config/database.config";
 import { MarketLastParams } from "../dto/market-last-params.dto";
 
-class MarketService {
+export class MarketService {
+  constructor(private client: typeof redisClient) {}
   async getLast({ market: marketName }: MarketLastParams) {
-    const market = JSON.parse(await client.get(marketName));
+    const market = JSON.parse(await this.client.get(marketName));
     if (!market) return null;
     return market.deals[market.deals.length - 1];
   }
 
   async getDeals({ limit, last_id, market: marketName }: MarketDealsParams) {
-    const market = JSON.parse(await client.get(marketName));
+    const market = JSON.parse(await this.client.get(marketName));
     if (!market) return null;
     return (
       market.deals
@@ -22,7 +23,7 @@ class MarketService {
   }
 
   async getStatus({ period, market: marketName }: MarketStatusParams) {
-    const market = JSON.parse(await client.get(marketName));
+    const market = JSON.parse(await this.client.get(marketName));
     if (!market) return null;
     const schema = {
       period,
@@ -46,7 +47,7 @@ class MarketService {
   }
 
   async getStatusToday({ market: marketName }: MarketStatusTodayParams) {
-    const market = JSON.parse(await client.get(marketName));
+    const market = JSON.parse(await this.client.get(marketName));
     if (!market) return null;
     const schema = {
       open: "0",
@@ -69,4 +70,4 @@ class MarketService {
   }
 }
 
-export default new MarketService();
+export default new MarketService(redisClient);

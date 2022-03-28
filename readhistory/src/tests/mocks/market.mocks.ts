@@ -1,0 +1,36 @@
+import { UserDealHistory } from "../../typings/types/user-deal-history.return-type";
+
+export const userDealsMock: UserDealHistory[] = [
+  {
+    amount: 1,
+    deal: 1,
+    deal_fee: 1,
+    deal_id: 1,
+    deal_order_id: 1,
+    fee: 1,
+    id: 1,
+    market: "some market 1",
+    order_id: 1,
+    price: 1,
+    role: 1,
+    side: 1,
+    time: "2019-09-09",
+    user_id: 1,
+  },
+  {
+    amount: 2,
+    deal: 2,
+    deal_fee: 2,
+    deal_id: 2,
+    deal_order_id: 2,
+    fee: 2,
+    id: 2,
+    market: "some market 2",
+    order_id: 2,
+    price: 2,
+    role: 2,
+    side: 2,
+    time: "2020-09-09",
+    user_id: 2,
+  },
+];

@@ -1,10 +1,11 @@
 import { FinishedDetailParams } from "../dto/finished-detail-params.dto";
 import { OrderDealsParams } from "../dto/order-deals-params.dto";
 import { OrderFinishedParams } from "../dto/order-finished-params.dto";
-import orderService from "../services/order.service";
+import orderService, { OrderService } from "../services/order.service";
 import { validateAndConvert } from "../utils/validation.util";
 
-class OrderController {
+export class OrderController {
+  constructor(private orderService: OrderService) {}
   async deals(params: OrderDealsParams) {
     const { data, errors } = await validateAndConvert(OrderDealsParams, params);
 
@@ -18,7 +19,7 @@ class OrderController {
     return {
       limit: params.limit,
       offset: params.offset,
-      records: await orderService.getDeals(data),
+      records: await this.orderService.getDeals(data),
     };
   }
   async finished(params: OrderFinishedParams) {
@@ -35,7 +36,9 @@ class OrderController {
     }
 
     return {
-      records: await orderService.getOrderFinished(data),
+      offset: params.offset,
+      limit: params.limit,
+      records: await this.orderService.getOrderFinished(data),
     };
   }
   async finished_detail(params: FinishedDetailParams) {
@@ -52,9 +55,9 @@ class OrderController {
     }
 
     return {
-      records: await orderService.getFinishedDetail(data),
+      records: await this.orderService.getFinishedDetail(data),
     };
   }
 }
 
-export default new OrderController();
+export default new OrderController(orderService);

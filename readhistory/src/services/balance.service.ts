@@ -1,18 +1,20 @@
 import _ from "lodash";
-import { QueryResult } from "pg";
+import { Pool, QueryResult } from "pg";
 import { pool } from "../config/database.config";
 import { BalanceHistoryParams } from "../dto/balance-history-params.dto";
+import { BalanceHistory } from "../typings/types/balance-history.return-type";
 import { betweenDateQuery } from "../utils/between-date-query.util";
 import { fieldMatch } from "../utils/fields-match.util";
 
-class BalanceService {
+export class BalanceService {
+  constructor(private pool: Pool) {}
   async getHistory({
     offset,
     limit,
     start_time,
     end_time,
     ...params
-  }: BalanceHistoryParams) {
+  }: BalanceHistoryParams): Promise<BalanceHistory[]> {
     const timeBetween = betweenDateQuery("time", start_time, end_time, true);
 
     const queryString = `
@@ -21,10 +23,12 @@ class BalanceService {
        )} ${timeBetween} LIMIT ${limit} OFFSET ${offset};
     `;
 
-    const { rows }: QueryResult = await pool.query(queryString);
+    const { rows }: QueryResult<BalanceHistory> = await this.pool.query(
+      queryString
+    );
 
     return rows;
   }
 }
 
-export default new BalanceService();
+export default new BalanceService(pool);
