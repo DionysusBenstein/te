@@ -1,64 +1,44 @@
--- balance_history
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (1, '2018-1-01 13:21', 1, 'BTC', 'A', 5, 155, 'AAA');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (2, '2018-1-01 13:21', 2, 'ETH', 'A', 5, 5, 'BBB');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (3, '2019-1-01 13:21', 2, 'BTC', 'A', 5, 155, 'AAA');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (4, '2019-1-01 13:21', 1, 'ETH', 'A', 5, 155, 'AAA');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (5, '2020-1-01 13:21', 1, 'BTC', 'A', 5, 155, 'AAA');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (6, '2020-1-01 13:21', 2, 'ETH', 'A', 5, 155, 'AAA');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (7, '2021-1-01 13:21', 2, 'BTC', 'A', 5, 155, 'AAA');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (8, '2021-1-01 13:21', 1, 'ETH', 'A', 5, 155, 'AAA');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (9, '2022-1-01 13:21', 1, 'BTC', 'A', 5, 155, 'AAA');
-
-INSERT INTO "balance_history" ("id", "time", "user_id", "asset", "business", "change", "balance", "detail")
-VALUES (10, '2022-1-01 13:21', 2, 'ETH', 'A', 5, 155, 'AAA');
-
-
-
--- order_history
-INSERT INTO "order_history" ("id", "create_time", "finish_time", "user_id", "market", "source", "t", "side", "price", "amount", "taker_fee", "maker_fee", "deal_stock", "deal_money", "deal_fee")
-VALUES (1, '2022-2-28 04:42', '2022-2-28 04:56', 1, 'ETHBTC', 'AAA', 5, 5, 20, 15, 1, 1, 2, 2, 6);
-
-INSERT INTO "order_history" ("id", "create_time", "finish_time", "user_id", "market", "source", "t", "side", "price", "amount", "taker_fee", "maker_fee", "deal_stock", "deal_money", "deal_fee")
-VALUES (2, '2022-2-28 06:25', '2022-2-28 07:31', 2, 'XRPBTC', 'AAA', 5, 5, 20, 15, 1, 1, 2, 2, 6);
-
-
-INSERT INTO "deal_history" ("id", "time", "user_id", "deal_id", "order_id", "deal_order_id", "role", "price", "amount", "deal", "fee", "deal_fee") 
-VALUES (1, '2022-2-28 06:25', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
-
-INSERT INTO "order_detail" ("id", "create_time", "finish_time", "user_id", "market", "source", "t", "side", "price", "amount", "taker_fee", "maker_fee", "deal_stock", "deal_money", "deal_fee")
-VALUES (1, '2018-2-28 06:25', '2022-2-28 07:31', 2, 'XRPBTC', 'AAA', 5, 5, 20, 15, 1, 1, 2, 2, 6);
-
-INSERT INTO "user_deal_history" (
+INSERT INTO "balance_history" (
     "id",
-    "time",
     "user_id",
-    "market",
-    "deal_id",
-    "order_id",
-    "deal_order_id",
+    "balance",
+    "change",
+    "asset",
+    "business",
+    "detail",
+    "time"
+)
+VALUES 
+    (1, 1, 10, 10, 'BTC', 'deposit', '', '2018-1-01 13:21'),
+    (2, 2, 10, 10, 'ETH', 'withdraw', '', '2018-1-01 13:21'),
+    (3, 2, 10, 10, 'BTC', 'withdraw', '', '2019-1-05 12:26'),
+    (4, 1, 10, 10, 'XRP', 'deposit', '', '2019-1-01 13:21'),
+    (5, 1, 10, 10, 'LTC', 'deposit', '', '2020-1-01 13:21'),
+    (6, 2, 10, 10, 'XRP', 'withdraw', '', '2020-1-01 15:21'),
+    (7, 2, 10, 10, 'LTC', 'deposit', '', '2021-1-01 13:21'),
+    (8, 1, 10, 10, 'ETH', 'withdraw', '', '2021-1-01 13:21'),
+    (9, 1, 10, 10, 'BTC', 'deposit', '', '2022-1-01 13:21'),
+    (10, 2, 10, 10, 'ETH', 'withdraw', '', '2022-1-04 12:21');
+
+
+INSERT INTO "order_history" (
+    "id",
+    "user_id",
+    "type",
     "side",
-    "role",
     "price",
     "amount",
-    "deal",
-    "fee",
-    "deal_fee"
+    "market",
+    "deal_money",
+    "deal_stock",
+    "taker_fee",
+    "maker_fee",
+    "deal_fee",
+    "create_time",
+    "finish_time"
 )
-VALUES (1, '2018-2-28 06:25', 2, 'XRPBTC', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+VALUES 
+    (1, 1, 'market', 'bid', 10, 10, 'ETHBTC', 9, 9, 1, 1, 2, '2022-2-28 04:42', '2022-2-28 04:56'),
+    (2, 2, 'limit', 'ask', 10, 10, 'ETHBTC', 9, 9, 1, 1, 2, '2022-2-28 04:42', '2022-2-28 05:56'),
+    (3, 2, 'market', 'ask', 15, 15, 'ETHBTC', 9, 9, 1, 1, 2, '2022-2-28 04:42', '2022-2-28 02:56'),
+    (4, 1, 'limit', 'bid', 10, 10, 'ETHBTC', 9, 9, 1, 1, 2, '2022-2-28 04:42', '2022-2-28 01:56');
