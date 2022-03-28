@@ -1,5 +1,5 @@
-import { BalanceController } from "../../balance.controller";
-import { BalanceService } from "../../../services/balance.service";
+import { BalanceController } from "../../controllers/balance.controller";
+import { BalanceService } from "../../services/balance.service";
 import { balanceHistoryMock } from "../mocks/balance.mocks";
 describe("BalanceController", () => {
   const balanceController = new BalanceController({

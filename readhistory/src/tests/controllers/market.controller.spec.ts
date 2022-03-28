@@ -1,7 +1,7 @@
-import { MarketController } from "../../market.controller";
-import { MarketService } from "../../../services/market.service";
+import { MarketController } from "../../controllers/market.controller";
+import { MarketUserDealsParams } from "../../dto/market-user-deals-params.dto";
+import { MarketService } from "../../services/market.service";
 import { userDealsMock } from "../mocks/market.mocks";
-import { MarketUserDealsParams } from "../../../dto/market-user-deals-params.dto";
 
 describe("MarketController", () => {
   const marketController = new MarketController({

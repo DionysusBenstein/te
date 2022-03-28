@@ -1,6 +1,6 @@
-import { MarketService } from "../../../services/market.service";
+import { MarketUserDealsParams } from "../../dto/market-user-deals-params.dto";
+import { MarketService } from "../../services/market.service";
 import { userDealsMock } from "../mocks/market.mocks";
-import { MarketUserDealsParams } from "../../../dto/market-user-deals-params.dto";
 import { createInstance } from "../utils/create-instance.util";
 
 describe("MarketService", () => {

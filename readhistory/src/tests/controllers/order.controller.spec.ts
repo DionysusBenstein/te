@@ -1,9 +1,9 @@
-import { FinishedDetailParams } from "../../../dto/finished-detail-params.dto";
-import { OrderDealsParams } from "../../../dto/order-deals-params.dto";
-import { OrderFinishedParams } from "../../../dto/order-finished-params.dto";
-import { OrderService } from "../../../services/order.service";
-import { resolved } from "../../../utils/resolved.util";
-import { OrderController } from "../../order.controller";
+import { OrderController } from "../../controllers/order.controller";
+import { FinishedDetailParams } from "../../dto/finished-detail-params.dto";
+import { OrderDealsParams } from "../../dto/order-deals-params.dto";
+import { OrderFinishedParams } from "../../dto/order-finished-params.dto";
+import { OrderService } from "../../services/order.service";
+import { resolved } from "../../utils/resolved.util";
 import {
   dealHistoryMock,
   orderDetailMock,

@@ -1,4 +1,4 @@
-import { BalanceService } from "../../../services/balance.service";
+import { BalanceService } from "../../services/balance.service";
 import { balanceHistoryMock } from "../mocks/balance.mocks";
 import { createInstance } from "../utils/create-instance.util";
 

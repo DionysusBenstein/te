@@ -1,4 +1,4 @@
-import { BalanceHistory } from "../../../typings/types/balance-history.return-type";
+import { BalanceHistory } from "../../typings/types/balance-history.return-type";
 
 export const balanceHistoryMock: BalanceHistory[] = [
   {

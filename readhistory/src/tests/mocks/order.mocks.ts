@@ -1,6 +1,6 @@
-import { DealHistory } from "../../../typings/types/deal-history.return-type";
-import { OrderDetail } from "../../../typings/types/order-detail.return-type";
-import { OrderHistory } from "../../../typings/types/order-history.return-type";
+import { DealHistory } from "../../typings/types/deal-history.return-type";
+import { OrderDetail } from "../../typings/types/order-detail.return-type";
+import { OrderHistory } from "../../typings/types/order-history.return-type";
 
 export const dealHistoryMock: DealHistory[] = [
   {

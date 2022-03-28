@@ -1,4 +1,4 @@
-import { UserDealHistory } from "../../../typings/types/user-deal-history.return-type";
+import { UserDealHistory } from "../../typings/types/user-deal-history.return-type";
 
 export const userDealsMock: UserDealHistory[] = [
   {
