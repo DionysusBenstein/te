@@ -3,9 +3,10 @@ import { MarketStatusParams } from "./../dto/market-status-params.dto";
 import { MarketDealsParams } from "./../dto/market-deals-params.dto";
 import { MarketLastParams } from "../dto/market-last-params.dto";
 import { validateAndConvert } from "../utils/validation.util";
-import marketService from "../services/market.service";
+import marketService, { MarketService } from "../services/market.service";
 
-class MarketController {
+export class MarketController {
+  constructor(private marketService: MarketService) {}
   async last(params: MarketLastParams) {
     const { data, errors } = await validateAndConvert(MarketLastParams, params);
 
@@ -16,7 +17,7 @@ class MarketController {
       };
     }
 
-    return await marketService.getLast(data);
+    return await this.marketService.getLast(data);
   }
 
   async deals(params: MarketDealsParams) {
@@ -32,7 +33,7 @@ class MarketController {
       };
     }
 
-    return await marketService.getDeals(data);
+    return await this.marketService.getDeals(data);
   }
 
   async status(params: MarketStatusParams) {
@@ -48,7 +49,7 @@ class MarketController {
       };
     }
 
-    return await marketService.getStatus(data);
+    return await this.marketService.getStatus(data);
   }
 
   async status_today(params: MarketStatusTodayParams) {
@@ -64,8 +65,8 @@ class MarketController {
       };
     }
 
-    return await marketService.getStatusToday(data);
+    return await this.marketService.getStatusToday(data);
   }
 }
 
-export default new MarketController();
+export default new MarketController(marketService);

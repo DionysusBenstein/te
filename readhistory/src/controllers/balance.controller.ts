@@ -1,8 +1,10 @@
 import { BalanceHistoryParams } from "../dto/balance-history-params.dto";
-import balanceService from "../services/balance.service";
+import balanceService, { BalanceService } from "../services/balance.service";
 import { validateAndConvert } from "../utils/validation.util";
 
-class BalanceController {
+export class BalanceController {
+  constructor(private balanceService: BalanceService) {}
+
   async history(params: BalanceHistoryParams) {
     const { data, errors } = await validateAndConvert(
       BalanceHistoryParams,
@@ -19,9 +21,9 @@ class BalanceController {
     return {
       limit: params.limit,
       offset: params.offset,
-      records: await balanceService.getHistory(data),
+      records: await this.balanceService.getHistory(data),
     };
   }
 }
 
-export default new BalanceController();
+export default new BalanceController(balanceService);

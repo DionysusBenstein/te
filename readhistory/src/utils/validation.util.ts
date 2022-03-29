@@ -16,7 +16,6 @@ export async function validateAndConvert(
     excludeExtraneousValues: true,
     strategy: "exposeAll",
   });
-  console.log(result.data);
 
   const errors = await validate(result.data as any, {
     forbidNonWhitelisted: true,

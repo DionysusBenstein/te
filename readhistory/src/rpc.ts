@@ -6,8 +6,6 @@ import { FinishedDetailParams } from "./dto/finished-detail-params.dto";
 import { MarketUserDealsParams } from "./dto/market-user-deals-params.dto";
 import { OrderDealsParams } from "./dto/order-deals-params.dto";
 import { OrderFinishedParams } from "./dto/order-finished-params.dto";
-import marketService from "./services/market.service";
-import { validateAndConvert } from "./utils/validation.util";
 
 export const methods = {
   balance: {

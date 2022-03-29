@@ -1,8 +1,9 @@
 import { MarketUserDealsParams } from "../dto/market-user-deals-params.dto";
-import marketService from "../services/market.service";
+import marketService, { MarketService } from "../services/market.service";
 import { validateAndConvert } from "../utils/validation.util";
 
-class MarketController {
+export class MarketController {
+  constructor(private marketService: MarketService) {}
   async user_deals(params: MarketUserDealsParams) {
     const { data, errors } = await validateAndConvert(
       MarketUserDealsParams,
@@ -17,9 +18,11 @@ class MarketController {
     }
 
     return {
-      records: await marketService.getUserDeals(data),
+      offset: params.offset,
+      limit: params.limit,
+      records: await this.marketService.getUserDeals(data),
     };
   }
 }
 
-export default new MarketController();
+export default new MarketController(marketService);
