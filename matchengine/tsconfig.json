@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
+    "lib": [ "es6", "DOM" ],
+    "target": "es5",
+    "downlevelIteration": true,
     "esModuleInterop": true,
     "outDir": "dist",
     "baseUrl": ".",
+    "experimentalDecorators": true
   }
 }

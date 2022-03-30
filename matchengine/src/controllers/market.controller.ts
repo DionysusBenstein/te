@@ -1,17 +1,27 @@
-import { Request, Response } from 'express';
-import db from '../database/queries';
+import { MarketSummaryParams } from '../dto/market-summary-params.dto';
+import marketService from '../services/market.service';
+import { validateAndConvert } from '../utils/validation.util';
 
 class MarketController {
-    async list(req: Request, res: Response) {
-        const response = await db.getMarketList();
-        return res.json(response);
+  list() {
+    return marketService.list();
+  }
+
+  async summary(params: MarketSummaryParams) {
+    const { data, errors } = await validateAndConvert(
+      MarketSummaryParams,
+      params
+    );
+
+    if (errors) {   
+      return {
+        errors,
+        message: 'Invalid params!',
+      };
     }
 
-    async summary(req: Request, res: Response) {
-        const { marketList } = req.body;
-        const response = await db.getMarketSummary(marketList);
-        return res.json(response);
-    }
+    return await marketService.summary(data);
+  }
 }
 
 export default new MarketController();

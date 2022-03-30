@@ -1,17 +1,27 @@
-import { Request, Response } from 'express';
-import db from '../database/queries';
+import { AssetSummaryParams } from '../dto/asset-summary-params.dto';
+import assetService from '../services/asset.service';
+import { validateAndConvert } from '../utils/validation.util';
 
 class AssetController {
-    async list(req: Request, res: Response) {
-        const response = await db.getAssetList();
-        return res.json(response);
+  list() {
+    return assetService.list();
+  }
+
+  async summary(params: AssetSummaryParams) {
+    const { data, errors } = await validateAndConvert(
+      AssetSummaryParams,
+      params
+    );
+
+    if (errors) {
+      return {
+        errors,
+        message: 'Invalid params!',
+      };
     }
 
-    async summary(req: Request, res: Response) {
-        const { marketList } = req.body;
-        const response = await db.getAssetSummary(marketList);
-        return res.json(response);
-    }
+    return await assetService.summary(data);
+  }
 }
 
 export default new AssetController();

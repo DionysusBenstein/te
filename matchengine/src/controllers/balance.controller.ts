@@ -1,21 +1,40 @@
-import { Request, Response } from 'express';
-import db from '../database/queries';
+import { BalanceQueryParams } from '../dto/balance-query-params.dto';
+import { UpdateBalanceParams } from '../dto/update-balance-params.dto';
+import balanceService from '../services/balance.service';
+import { validateAndConvert } from '../utils/validation.util';
 
 class BalanceController {
-    async query(userId: number, ...assets: string[]) {
-        const response = await db.getBalance(userId, ...assets);
-        return response;
+  async query(params: BalanceQueryParams) {
+    const { data, errors } = await validateAndConvert(
+      BalanceQueryParams,
+      params
+    );
+
+    if (errors) {
+      return {
+        errors,
+        message: 'Invalid params!',
+      };
     }
 
-    async update(userId: number, asset: string, business: string, businessId: number, change: number, detail: object) {
-        const response = await db.updateBalance(userId, asset, business, businessId, change, detail);
-        return response;
+    return await balanceService.query(data);
+  }
+
+  async update(params: UpdateBalanceParams) {
+    const { data, errors } = await validateAndConvert(
+      UpdateBalanceParams,
+      params
+    );
+
+    if (errors) {
+      return {
+        errors,
+        message: 'Invalid params!',
+      };
     }
 
-    async history(userId: number, asset: string, business: string, startTime: Date, endTime: Date, offset: number, limit: number) {
-        const response = await db.getBalanceHistory(userId, asset, business, startTime, endTime, offset, limit);
-        return response;
-    }
+    return await balanceService.update(data);
+  }
 }
 
 export default new BalanceController();
