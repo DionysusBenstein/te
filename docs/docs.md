@@ -293,7 +293,7 @@ is the currency an user may "buy" (or put "bid" limit order) in exchange of the 
 
 <a name="references"></a>
 # References
-1. **Globiance Trading Engine** architecture inspired by _[ViaBTC Exchange Server](https://github.com/viabtc/viabtc_exchange_server) (C programming language)._
+1. **Globiance Trading Engine** architecture inspired by [_ViaBTC Exchange Server_](https://github.com/viabtc/viabtc_exchange_server) (C programming language).
 2. [_How to Build a Trading Engine_](https://around25.com/blog/building-a-trading-engine-for-a-crypto-exchange/)
-3. _[Algo Trading Platform (Trading Engine) Series](https://www.youtube.com/watch?v=BUG7Mv-sPIY&list=PLIkrF4j3_p-3fA9LyzSpT6yFPnqvJ02LS) (C#)_
+3. [_Algo Trading Platform (Trading Engine) Series_](https://www.youtube.com/watch?v=BUG7Mv-sPIY&list=PLIkrF4j3_p-3fA9LyzSpT6yFPnqvJ02LS) (C#)
 
