@@ -1,5 +1,5 @@
 FROM node:16
-WORKDIR /usr/src/readhistory
+WORKDIR /usr/src/matchengine
 
 COPY package.json .
 
