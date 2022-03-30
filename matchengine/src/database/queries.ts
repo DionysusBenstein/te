@@ -1,22 +1,123 @@
-import { QueryResult, Pool } from "pg";
-
-const pool = new Pool({
-  user: "postgres",
-  host: "127.0.0.1",
-  database: "exchange_db",
-  password: "b7Mg4UmK",
-  port: 5432,
-});
+import { pool } from '../config/database.config';
+import { QueryResult } from 'pg';
+import { Order } from '../types/types';
+import { getCurrentTimestamp } from '../utils/time.util';
 
 class Queries {
-  async getBalance(userId: number, ...assets: string[]) {
+  async getOrderHistory(userId: number, asset: string) {
     try {
       const response: QueryResult = await pool.query(
-        "SELECT * FROM balance_history WHERE user_id = $1 AND asset = ANY($2)",
-        [userId, [...assets]]
+        'SELECT * FROM order_history WHERE userId = $1 AND asset = $2',
+        [userId, asset]
       );
 
       return response.rows;
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  async appendOrderHistory({
+    id,
+    user_id,
+    type,
+    side,
+    price,
+    amount,
+    market,
+    taker_fee,
+    maker_fee,
+    deal_money,
+    deal_stock,
+    deal_fee,
+    create_time,
+    finish_time,
+  }: Order): Promise<Order[]>{
+    try {
+      const queryString: string = `
+        INSERT INTO "order_history" (
+          "id",
+          "user_id",
+          "type",
+          "side",
+          "price",
+          "amount",
+          "market",
+          "deal_money",
+          "deal_stock",
+          "taker_fee",
+          "maker_fee",
+          "deal_fee",
+          "create_time",
+          "finish_time"
+        )
+        VALUES            
+          (
+            '${id}',
+            ${user_id},
+            '${type}',
+            '${side}',
+            ${price},
+            ${amount},
+            '${market}',
+            ${deal_money},
+            ${deal_stock},
+            ${taker_fee},
+            ${maker_fee},
+            ${deal_fee},
+            '${create_time}',
+            '${finish_time}'
+          )`;
+
+      const response: QueryResult = await pool.query(queryString);
+
+      return response;
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  async updateOrder(order_id: string): Promise<Order[]>{
+    try {
+      const queryString: string = `
+      UPDATE "order_history"
+      SET finish_time = '${getCurrentTimestamp()}',
+      WHERE id = '${order_id}';`;
+
+      const response: QueryResult = await pool.query(queryString);
+
+      return response;
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  async getBalanceHistory(user_id: number, assets: string[]) {
+    try {      
+      const response: QueryResult = await pool.query(
+        // 'SELECT * FROM balance_history WHERE user_id = $1 AND asset = ANY($2)',
+        'SELECT * FROM balance_history WHERE ($1::int IS NULL OR user_id=$1) AND asset = ANY($2)',
+        [user_id, [...assets]]
+      );
+
+      return response.rows;
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  async getLastBalance(user_id: number, assets: string) {
+    try {
+      const response: QueryResult = await pool.query(
+        'SELECT * FROM balance_history WHERE user_id = $1 AND asset = $2 ORDER BY time DESC LIMIT 1',
+        [user_id, assets]
+      );
+
+      return response.rows[0];
     } catch (err) {
       console.log(err);
       return err;
@@ -24,99 +125,34 @@ class Queries {
   }
 
   async updateBalance(
-    userId: number,
+    id: number,
+    user_id: number,
+    time: string,
     asset: string,
     business: string,
-    businessId: number,
     change: number,
-    detail: object
+    balance: number,
+    detail: string
   ) {
     try {
-      const response: QueryResult = await pool.query(
-        `
-                UPDATE balance_history
-                SET asset = $2, business = $3, business_id = $4, change = $5, detail = $6
-                WHERE user_id = $1;
-                `,
-        [userId, asset, business, businessId, change, detail]
-      );
+      const queryString: string = `
+                INSERT INTO balance_history (id, user_id, time, asset, business, change, balance, detail)
+                VALUES (${id}, ${user_id}, '${time}', '${asset}', '${business}', ${change}, ${balance}, '${detail}');
+            `;
+      const response: QueryResult = await pool.query(queryString);
 
-      return "success";
+      return response;
     } catch (err) {
       console.log(err);
       return err;
     }
   }
 
-  async getBalanceHistory(
-    userId: number,
-    asset: string,
-    business: string,
-    startTime: Date,
-    endTime: Date,
-    offset: number,
-    limit: number
-  ) {
+  async getBalanceSlice(asset: string) {
     try {
       const response: QueryResult = await pool.query(
-        "SELECT * FROM balance_history WHERE user_id = $1 asset = $2, business = $3, start_time = $4, end_time = $5, offset = $6, limit = $7",
-        [userId, asset, business, startTime, endTime, offset, limit]
-      );
-
-      return response.rows;
-    } catch (err) {
-      console.log(err);
-      return err;
-    }
-  }
-
-  async getMarketList() {
-    try {
-      const response: QueryResult = await pool.query(
-        "SELECT * FROM market_history",
-        []
-      );
-
-      return response.rows;
-    } catch (err) {
-      console.log(err);
-      return err;
-    }
-  }
-
-  async getMarketSummary(marketList: string) {
-    try {
-      const response: QueryResult = await pool.query(
-        "SELECT * FROM market_history WHERE ANY($1)",
-        [marketList]
-      );
-
-      return response.rows;
-    } catch (err) {
-      console.log(err);
-      return err;
-    }
-  }
-
-  async getAssetList() {
-    try {
-      const response: QueryResult = await pool.query(
-        "SELECT * FROM assets",
-        []
-      );
-
-      return response.rows;
-    } catch (err) {
-      console.log(err);
-      return err;
-    }
-  }
-
-  async getAssetSummary(assetList: string) {
-    try {
-      const response: QueryResult = await pool.query(
-        "SELECT * FROM assets WHERE ANY($1)",
-        [assetList]
+        'SELECT * FROM slice_balance WHERE asset = $1',
+        [asset]
       );
 
       return response.rows;
