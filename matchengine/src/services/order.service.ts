@@ -7,7 +7,7 @@ import { OrderSide, OrderType } from '../types/enums';
 import { Market, Order } from '../types/types';
 import config from '../config/matchengine.config';
 import { getCurrentTimestamp } from '../utils/time.util';
-import balanceService from './balance.service';
+import { sendMessage } from 'src/config/kafka.producer';
 import { v4 as uuidv4 } from 'uuid';
 
 class OrderService {
@@ -107,7 +107,7 @@ class OrderService {
       order.finish_time = getCurrentTimestamp();
       // balanceService.freezeBalance(user_id, money);
 
-      // push message to kafka
+      sendMessage('ORDER_LIMIT_FINISH');
       return order;
     }
 

@@ -2,24 +2,24 @@ version: "3.9"
 
 services:
   zookeeper:
-    image: docker.io/bitnami/zookeeper:3.7
+    container_name: zookeeper
+    image: zookeeper
+    hostname: zookeeper
     ports:
       - "2181:2181"
-    volumes:
-      - "zookeeper_data:/bitnami"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+
   kafka:
-    image: docker.io/bitnami/kafka:3.1
+    image: ches/kafka
+    container_name: kafka
+    hostname: kafka
     ports:
       - "9092:9092"
-    volumes:
-      - "kafka_data:/bitnami"
     environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      ZOOKEEPER_IP: zookeeper
     depends_on:
       - zookeeper
+
   redis:
     image: redis
     container_name: redis1
@@ -29,6 +29,7 @@ services:
       - ./redis:/data
     ports:
       - "6379:6379"
+      
   postgres:
     container_name: postgres
     image: postgres
@@ -52,9 +53,10 @@ services:
       - ./marketprice:/usr/src/marketprice
       - /usr/src/marketprice/node_modules
     ports:
-      - "3000:3000"
-    networks:
-      - main-networks
+      - "3000:3000"    
+    depends_on:
+      - zookeeper
+      - kafka
     restart: always
     command: npm run dev
 
@@ -68,8 +70,9 @@ services:
       - /usr/src/matchengine/node_modules
     ports:
       - "3001:3001"
-    networks:
-      - main-networks
+    depends_on:
+      - zookeeper
+      - kafka
     restart: always
     command: npm run dev
 
@@ -83,8 +86,6 @@ services:
       - /usr/src/readhistory/node_modules
     ports:
       - "3002:3002"
-    networks:
-      - main-networks
     restart: always
     command: npm run dev
 
@@ -98,8 +99,6 @@ services:
       - /usr/src/router/node_modules
     ports:
       - "3003:3003"
-    networks:
-      - main-networks
     restart: always
     command: npm run dev
 
@@ -109,6 +108,3 @@ volumes:
   kafka_data:
     driver: local
   pg-dataset:
-networks:
-  main-networks:
-    driver: bridge
