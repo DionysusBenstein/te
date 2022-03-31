@@ -5,7 +5,9 @@ import {
   IsString,
   IsNotEmpty,
   Min,
+  IsIn,
 } from 'class-validator';
+import { getMarketList } from '../utils/config.util';
 
 export class PendingParams {
   @IsInt()
@@ -16,6 +18,7 @@ export class PendingParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
+  @IsIn(getMarketList())
   market: string;
 
   @Expose()

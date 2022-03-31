@@ -5,14 +5,17 @@ import {
   IsString,
   IsNotEmpty,
   IsEnum,
+  IsIn,
   Min,
 } from 'class-validator';
 import { OrderSide } from '../types/enums';
+import { getMarketList } from '../utils/config.util';
 
 export class OrderBookParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
+  @IsIn(getMarketList())
   market: string;
 
   @Expose()

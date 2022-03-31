@@ -6,8 +6,9 @@ import {
   IsString,
   IsEnum,
   IsPositive,
+  IsIn,
 } from 'class-validator';
-
+import { getMarketList } from '../utils/config.util';
 import { OrderSide } from '../types/enums';
 
 export class PutLimitParams {
@@ -23,6 +24,7 @@ export class PutLimitParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
+  @IsIn(getMarketList())
   market: string;
   
   @Expose()

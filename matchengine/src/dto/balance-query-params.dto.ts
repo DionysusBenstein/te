@@ -4,6 +4,8 @@ import {
   IsArray,
   IsPositive,
 } from 'class-validator';
+import { IsEachIn } from '../validators/each-in.validator';
+import { getAssetList } from '../utils/config.util';
 
 export class BalanceQueryParams {
   @Expose()
@@ -13,5 +15,6 @@ export class BalanceQueryParams {
 
   @Expose()
   @IsArray()
+  @IsEachIn(getAssetList())
   assets: string[];
 }

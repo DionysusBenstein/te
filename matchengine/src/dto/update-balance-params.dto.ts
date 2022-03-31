@@ -5,8 +5,9 @@ import {
   IsString,
   IsEnum,
   IsPositive,
+  IsIn,
 } from 'class-validator';
-
+import { getMarketList } from '../utils/config.util';
 import { BusinessEnum } from '../types/enums';
 
 export class UpdateBalanceParams {
@@ -28,6 +29,7 @@ export class UpdateBalanceParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
+  @IsIn(getMarketList())
   asset: string;
 
   @Expose()
