@@ -11,7 +11,7 @@ export class MarketDealsParams {
   @IsInt()
   @IsPositive()
   @Max(10000)
-  limit: number; // no more than 10000
+  limit: number;
   
   @Expose()
   @IsInt()

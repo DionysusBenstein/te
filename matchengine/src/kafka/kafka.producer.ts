@@ -1,8 +1,7 @@
 import { Kafka } from 'kafkajs';
+import config from '../config/kafka.config'
 
-const clientId = 'matchengine';
-const brokers = ['kafka:9092'];
-const topic = 'message-log';
+const { clientId, brokers, topic } = config;
 
 const kafka = new Kafka({
   clientId,

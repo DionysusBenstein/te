@@ -33,21 +33,11 @@ export const methods = {
     },
 
     async put_market(args, callback) {
-      const response = {
-        message: 'order.put_market is working!',
-        args,
-      };
-
-      callback(null, response);
+      callback(null, await orderController.putMarket(args));
     },
 
     async cancel(args, callback) {
-      const response = {
-        message: 'order.cancel is working!',
-        args,
-      };
-
-      callback(null, response);
+      callback(null, await orderController.cancel(args));
     },
 
     async book(args, callback) {
@@ -55,12 +45,7 @@ export const methods = {
     },
 
     async depth(args, callback) {
-      const response = {
-        message: 'order.depth is working!',
-        args,
-      };
-
-      callback(null, response);
+      callback(null, await orderController.depth(args));
     },
 
     async pending(args, callback) {

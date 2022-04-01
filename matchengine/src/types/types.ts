@@ -5,7 +5,7 @@ export type Order = {
   user_id: number,
   type: OrderType,
   side: OrderSide,
-  price: number;
+  price?: number;
   amount: number;
   market: string;
   taker_fee: number,

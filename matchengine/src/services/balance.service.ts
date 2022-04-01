@@ -2,6 +2,7 @@ import { BalanceQueryParams } from '../dto/balance-query-params.dto';
 import { UpdateBalanceParams } from '../dto/update-balance-params.dto';
 import { getCurrentTimestamp } from '../utils/time.util';
 import { Balance } from '../types/types';
+import { v4 as uuidv4 } from 'uuid';
 import db from '../database/queries';
 
 class BalanceService {
@@ -48,8 +49,11 @@ class BalanceService {
     const response = await db.getBalanceHistory(user_id, assets);
     const { asset, balance } = response[0];
 
-    const available = response.reduce((acc: number, item: Balance) => acc + +item.balance, 0);
-    
+    const available = response.reduce(
+      (acc: number, item: Balance) => acc + +item.balance,
+      0
+    );
+
     const resObj = {
       [asset]: {
         available: available.toFixed(16),
@@ -61,39 +65,36 @@ class BalanceService {
   }
 
   async update({
-    id,
-    userId,
+    user_id,
     asset,
     business,
     change,
     detail,
     ...params
-  }) {
-    const balanceArr = await db.getBalanceHistory(userId, asset);
-    const { balance: lastBalance, id: lastId } = balanceArr.pop();
+  }: UpdateBalanceParams) {
+    const balanceArr = await db.getBalanceHistory(user_id, [asset]);
+    const { balance: lastBalance } = balanceArr.pop();
 
     if (change < 0 && lastBalance < Math.abs(change)) {
       return { message: 'Balance is not enough' };
     }
 
-    if (lastId >= id) {
-      return { message: `id ${id} already exist` };
-    }
-
-    const newBalance = +lastBalance + change;
+    const balance: number = +lastBalance + change;
     const time = getCurrentTimestamp();
-    const response = await db.updateBalance(
-      id,
-      userId,
+    const newBalance = {
+      id: uuidv4(),
+      user_id,
       time,
       asset,
       business,
       change,
-      newBalance,
-      detail
-    );
+      balance,
+      detail,
+    };
 
-    return { ...response };
+    await db.updateBalance(newBalance);
+
+    return { newBalance: newBalance };
   }
 }
 

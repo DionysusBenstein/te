@@ -12,7 +12,6 @@ class AssetService {
 
     for (const asset of assets) {
       const balanceHistory = await db.getBalanceHistory(null, [asset]);
-      console.log(balanceHistory);
 
       let total_balance = balanceHistory.reduce(
         (acc: number, item: Balance) => acc + +item.balance,

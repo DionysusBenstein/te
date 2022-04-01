@@ -7,7 +7,7 @@ import {
   IsPositive,
   IsIn,
 } from 'class-validator';
-import { getMarketList } from '../utils/config.util';
+import { getAssetList } from '../utils/config.util';
 import { BusinessEnum } from '../types/enums';
 
 export class UpdateBalanceParams {
@@ -19,17 +19,12 @@ export class UpdateBalanceParams {
   @Expose()
   @IsInt()
   @IsPositive()
-  balance: number;
-
-  @Expose()
-  @IsInt()
-  @IsPositive()
   change: number;
 
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsIn(getMarketList())
+  @IsIn(getAssetList())
   asset: string;
 
   @Expose()

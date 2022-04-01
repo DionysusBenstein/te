@@ -1,6 +1,6 @@
 import { pool } from '../config/database.config';
 import { QueryResult } from 'pg';
-import { Order } from '../types/types';
+import { Order, Balance } from '../types/types';
 import { getCurrentTimestamp } from '../utils/time.util';
 
 class Queries {
@@ -98,7 +98,6 @@ class Queries {
   async getBalanceHistory(user_id: number, assets: string[]) {
     try {      
       const response: QueryResult = await pool.query(
-        // 'SELECT * FROM balance_history WHERE user_id = $1 AND asset = ANY($2)',
         'SELECT * FROM balance_history WHERE ($1::int IS NULL OR user_id=$1) AND asset = ANY($2)',
         [user_id, [...assets]]
       );
@@ -124,20 +123,20 @@ class Queries {
     }
   }
 
-  async updateBalance(
-    id: number,
-    user_id: number,
-    time: string,
-    asset: string,
-    business: string,
-    change: number,
-    balance: number,
-    detail: string
-  ) {
+  async updateBalance({
+    id,
+    user_id,
+    time,
+    asset,
+    business,
+    change,
+    balance,
+    detail
+  }: Balance) {
     try {
       const queryString: string = `
                 INSERT INTO balance_history (id, user_id, time, asset, business, change, balance, detail)
-                VALUES (${id}, ${user_id}, '${time}', '${asset}', '${business}', ${change}, ${balance}, '${detail}');
+                VALUES ('${id}', ${user_id}, '${time}', '${asset}', '${business}', ${change}, ${balance}, '${detail}');
             `;
       const response: QueryResult = await pool.query(queryString);
 
