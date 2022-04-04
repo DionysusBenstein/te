@@ -1,0 +1,30 @@
+{
+  "name": "websocket",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node -r dotenv/config dist/ .",
+    "dev:build": "tsc --watch",
+    "dev:start": "nodemon -L -r dotenv/config dist/ .",
+    "dev": "npm-run-all --parallel dev:*"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.21",
+    "dotenv": "^16.0.0",
+    "nodemon": "^2.0.15",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^4.5.5"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "deasync": "^0.1.26",
+    "jayson": "^3.6.6",
+    "kafkajs": "^1.16.0",
+    "rpc-websockets": "^7.4.17",
+    "ws": "^8.5.0"
+  }
+}

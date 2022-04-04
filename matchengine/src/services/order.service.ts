@@ -101,11 +101,11 @@ class OrderService {
     ...params
   }: PutLimitParams) {
     const { money } = this.getMarketByName(market);
-    const { balance } = await db.getLastBalance(user_id, money);
+    // const { balance } = await db.getLastBalance(user_id, money);
 
-    if (side === OrderSide.BID && balance < amount) {
-      return { message: 'Balance not enough' };
-    }
+    // if (side === OrderSide.BID && balance < amount) {
+    //   return { message: 'Balance not enough' };
+    // }
 
     const order: Order = {
       id: uuidv4(),
@@ -133,10 +133,10 @@ class OrderService {
 
     if (isExecuted) {
       order.finish_time = getCurrentTimestamp();
-      // sendMessage('ORDER_LIMIT_FINISH');
       return order;
     }
-
+    
+    await sendMessage('ORDER_LIMIT_PUT');
     // await db.appendOrderHistory(order);
 
     return order;

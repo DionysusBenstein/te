@@ -1,5 +1,5 @@
 export default {
-  clientId: 'matchengine',
+  clientId: 'websocket',
   brokers: ['kafka:9092'],
-  topic: 'order'
+  topic: 'order',
 };
