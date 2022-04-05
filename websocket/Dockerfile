@@ -8,5 +8,5 @@ COPY . .
 
 RUN npm run build
 
-EXPOSE $PORT
+EXPOSE $WS_PORT
 CMD [ "node", "dist/index.js" ]

@@ -1,8 +1,9 @@
 {
-    "compilerOptions": {
-      "esModuleInterop": true,
-      "outDir": "dist",
-      "baseUrl": "."
-    }
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "lib": ["es2021", "dom"]
   }
+}
   

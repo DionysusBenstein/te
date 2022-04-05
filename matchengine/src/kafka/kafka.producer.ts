@@ -1,7 +1,7 @@
 import { Kafka } from 'kafkajs';
 import config from '../config/kafka.config'
 
-const { clientId, brokers, topic } = config;
+const { clientId, brokers } = config;
 
 const kafka = new Kafka({
   clientId,
@@ -20,7 +20,7 @@ export async function connect() {
   }  
 }
 
-export async function sendMessage(value: string) {
+export async function sendMessage(topic: string, value: string) {
   try {
     const result = await producer.send({
       topic,
@@ -31,3 +31,4 @@ export async function sendMessage(value: string) {
     console.error(`ERROR::PRODUCER:: ${err}`);
   }
 }
+

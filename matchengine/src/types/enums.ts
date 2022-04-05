@@ -1,12 +1,12 @@
 export enum OrderSide {
   ASK = 'ask',
-  BID = 'bid'
+  BID = 'bid',
 }
 
 export enum BusinessEnum {
   DEPOSIT = 'deposit',
   WITHDRAW = 'withdraw',
-  TRADE = 'trade'
+  TRADE = 'trade',
 }
 
 export enum OrderType {
@@ -25,5 +25,17 @@ export enum OrderStatus {
 
 export enum BalanceType {
   FREEZE = 'freeze',
-  AVAILABLE = 'available'
+  AVAILABLE = 'available',
+}
+
+export enum OrderEvent {
+  PUT = 'ORDER_EVENT_PUT',
+  UPDATE = 'ORDER_EVENT_UPDATE',
+  FINISH = 'ORDER_EVENT_FINISH',
+}
+
+export enum KafkaTopic {
+  DEALS = 'deals',
+  ORDERS = 'orders',
+  BALANCES = 'balances',
 }

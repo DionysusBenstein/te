@@ -3,6 +3,7 @@ import { FinishedDetailParams } from "../../dto/finished-detail-params.dto";
 import { OrderDealsParams } from "../../dto/order-deals-params.dto";
 import { OrderFinishedParams } from "../../dto/order-finished-params.dto";
 import { OrderService } from "../../services/order.service";
+import { SideEnum } from "../../typings/enums/side.enum";
 import { resolved } from "../../utils/resolved.util";
 import {
   dealHistoryMock,
@@ -52,7 +53,7 @@ describe("OrderController", () => {
         end_time: "2019-09-09",
         start_time: "2019-08-09",
         market: "some market",
-        side: 1,
+        side: SideEnum.ASK,
         user_id: 1,
       };
 

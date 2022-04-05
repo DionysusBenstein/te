@@ -1,5 +1,5 @@
 export enum SideEnum {
-  UNLIMITED,
-  SELL,
-  BUY,
+  // UNLIMITED,
+  ASK = 'ask',
+  BID = 'bid',
 }

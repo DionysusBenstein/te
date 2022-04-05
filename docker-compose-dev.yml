@@ -32,15 +32,15 @@ services:
   #     KAFKA_CLUSTERS_0_NAME: local
   #     KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
-  # redis:
-  #   image: redis
-  #   container_name: redis1
-  #   restart: unless-stopped
-  #   network_mode: bridge
-  #   volumes:
-  #     - ./redis:/data
-  #   ports:
-  #     - "6379:6379"
+  redis:
+    image: redis
+    container_name: redis1
+    restart: unless-stopped
+    network_mode: bridge
+    volumes:
+      - ./redis:/data
+    ports:
+      - 6379:6379
       
   postgres:
     container_name: postgres
@@ -56,21 +56,21 @@ services:
       POSTGRES_PASSWORD: b7Mg4UmK
       PGDATA: "/var/postgresql/data/pgdata"
 
-  # marketprice:
-  #   container_name: marketprice
-  #   build: ./marketprice
-  #   env_file:
-  #     - marketprice/.env
-  #   volumes:
-  #     - ./marketprice:/usr/src/marketprice
-  #     - /usr/src/marketprice/node_modules
-  #   ports:
-  #     - 3000:3000
-  #   depends_on:
-  #     - zookeeper
-  #     - kafka
-  #   restart: always
-  #   command: npm run dev
+  marketprice:
+    container_name: marketprice
+    build: ./marketprice
+    env_file:
+      - marketprice/.env
+    volumes:
+      - ./marketprice:/usr/src/marketprice
+      - /usr/src/marketprice/node_modules
+    ports:
+      - 3000:3000
+    depends_on:
+      - zookeeper
+      - kafka
+    restart: always
+    command: npm run dev
 
   matchengine:
     container_name: matchengine
@@ -82,24 +82,23 @@ services:
       - /usr/src/matchengine/node_modules
     ports:
       - 3001:3001
-    # depends_on:
-    #   - zookeeper
-    #   - kafka
+    depends_on:
+      - kafka
     restart: always
     command: npm run dev
 
-  # readhistory:
-  #   container_name: readhistory
-  #   build: ./readhistory
-  #   env_file:
-  #     - readhistory/.env
-  #   volumes:
-  #     - ./readhistory:/usr/src/readhistory
-  #     - /usr/src/readhistory/node_modules
-  #   ports:
-  #     - 3002:3002
-  #   restart: always
-  #   command: npm run dev
+  readhistory:
+    container_name: readhistory
+    build: ./readhistory
+    env_file:
+      - readhistory/.env
+    volumes:
+      - ./readhistory:/usr/src/readhistory
+      - /usr/src/readhistory/node_modules
+    ports:
+      - 3002:3002
+    restart: always
+    command: npm run dev
 
   router:
     container_name: router

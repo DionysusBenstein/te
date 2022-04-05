@@ -5,8 +5,9 @@ import { PendingParams } from '../dto/pending-params.dto';
 import { PendingDetailParams } from '../dto/pending-detail-params.dto';
 import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
+
 import db from '../database/queries';
-import { OrderSide, OrderType } from '../types/enums';
+import { OrderSide, OrderType, KafkaTopic, OrderEvent } from '../types/enums';
 import { Market, Order } from '../types/types';
 import config from '../config/matchengine.config';
 import { getCurrentTimestamp } from '../utils/time.util';
@@ -135,8 +136,8 @@ class OrderService {
       order.finish_time = getCurrentTimestamp();
       return order;
     }
-    
-    await sendMessage('ORDER_LIMIT_PUT');
+
+    await sendMessage(KafkaTopic.ORDERS, OrderEvent.PUT);
     // await db.appendOrderHistory(order);
 
     return order;
