@@ -10,11 +10,11 @@ class OrderController implements IWsRpcController {
   consumer: Consumer;
 
   query(params: any) {
-    return deasyncRequestHelper(Method.ORDER_PENDING, params, client);
+    return deasyncRequestHelper(Method.BALANCE_QUERY, params, client);
   }
 
   history(params: any) {
-    return deasyncRequestHelper(Method.ORDER_FINISHED, params, client);
+    return deasyncRequestHelper(Method.BALANCE_HISTORY, params, client);
   }
 
   async subscribe(params: any, ws: any) {

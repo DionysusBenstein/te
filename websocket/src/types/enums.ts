@@ -3,6 +3,8 @@ export enum Method {
   ORDER_DEPTH = 'order.depth',
   ORDER_PENDING = 'order.pending',
   ORDER_FINISHED = 'order.finished',
+  BALANCE_QUERY = 'balance.query',
+  BALANCE_HISTORY = 'balance.history',
 }
 
 export enum KafkaTopic {

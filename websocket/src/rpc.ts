@@ -1,5 +1,6 @@
 import depthController from './controllers/depth.controller';
 import orderController from './controllers/order.contoller';
+import assetController from './controllers/asset.contoller';
 
 export const methods = {
   kline: {},
@@ -20,5 +21,11 @@ export const methods = {
     update: orderController.update,
     unsubscribe: orderController.unsubscribe,
   },
-  asset: {},
+  asset: {
+    query: assetController.query,
+    history: assetController.history,
+    subscribe: assetController.subscribe,
+    update: assetController.update,
+    unsubscribe: assetController.unsubscribe,
+  },
 };

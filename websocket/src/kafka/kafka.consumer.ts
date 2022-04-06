@@ -1,36 +1,45 @@
 import { Kafka } from 'kafkajs';
-import {v4 as uuidv4} from 'uuid';
+import { Consumer, KafkaConfig } from 'kafkajs/types';
+import { v4 as uuidv4 } from 'uuid';
 import config from '../config/kafka.config';
 
-const { clientId, brokers } = config;
-const kafka = new Kafka({
-  clientId,
-  brokers,
-});
+class KafkaConsumer {
+  kafka: Kafka;
 
-export async function subscribe(topic: string, eachMessage) {
-  try {
-    const groupId = uuidv4()
-    const consumer = kafka.consumer({ groupId });
+  constructor(kafkaConfig: KafkaConfig) {
+    const { clientId, brokers } = kafkaConfig;
+    this.kafka = new Kafka({
+      clientId,
+      brokers,
+    });
+  }
 
-    console.log('Connecting to Kafka...');
-    await consumer.connect();
-    console.log(`✅ Connected to Kafka consumer (id: ${groupId})`);
+  async subscribe(topic: string, eachMessage): Consumer {
+    try {
+      const groupId: string = uuidv4();
+      const consumer: Consumer = this.kafka.consumer({ groupId });
 
-    await consumer.subscribe({ topic });
-    await consumer.run({ eachMessage });
+      console.log('Connecting to Kafka...');
+      await consumer.connect();
+      console.log(`✅ Connected to Kafka consumer (id: ${groupId})`);
 
-    return consumer;
-  } catch (err) {
-    console.error(`ERROR::CONSUMER:: ${err}`);
+      await consumer.subscribe({ topic });
+      await consumer.run({ eachMessage });
+
+      return consumer;
+    } catch (err) {
+      console.error(`ERROR::CONSUMER:: ${err}`);
+    }
+  }
+
+  unsubscribe(consumer: any): string {
+    try {
+      consumer.disconnect();
+      return 'Channel unsubscribed successfully';
+    } catch (err) {
+      console.error(`ERROR::CONSUMER:: ${err}`);
+    }
   }
 }
 
-export function unsubscribe(consumer: any) {
-  try {
-    consumer.disconnect();
-    return 'Channel unsubscribed successfully';
-  } catch (err) {
-    console.error(`ERROR::CONSUMER:: ${err}`);
-  }
-}
+export default new KafkaConsumer(config);
