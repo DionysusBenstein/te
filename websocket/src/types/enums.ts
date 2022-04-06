@@ -3,9 +3,12 @@ export enum Method {
   ORDER_DEPTH = 'order.depth',
   ORDER_PENDING = 'order.pending',
   ORDER_FINISHED = 'order.finished',
+  // Asset API
   BALANCE_QUERY = 'balance.query',
   BALANCE_HISTORY = 'balance.history',
+  // Market API
   MARKET_DEALS = 'market.deals',
+  MARKET_STATUS_TODAY = 'market.status_today',
 }
 
 export enum KafkaTopic {
