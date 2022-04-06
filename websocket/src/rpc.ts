@@ -5,9 +5,15 @@ import dealController from './controllers/deal.controller';
 import todayController from './controllers/today.controller';
 import stateController from './controllers/state.controller';
 import priceController from './controllers/price.controller';
+import klineController from './controllers/kline.controller';
 
 export const methods = {
-  kline: {},
+  kline: {
+    query: klineController.query,
+    subscribe: klineController.subscribe,
+    update: klineController.update,
+    unsubscribe: klineController.unsubscribe,
+  },
   price: {
     query: priceController.query,
     subscribe: priceController.subscribe,
