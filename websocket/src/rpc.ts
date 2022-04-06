@@ -4,10 +4,16 @@ import assetController from './controllers/asset.controller';
 import dealController from './controllers/deal.controller';
 import todayController from './controllers/today.controller';
 import stateController from './controllers/state.controller';
+import priceController from './controllers/price.controller';
 
 export const methods = {
   kline: {},
-  price: {},
+  price: {
+    query: priceController.query,
+    subscribe: priceController.subscribe,
+    update: priceController.update,
+    unsubscribe: priceController.unsubscribe,
+  },
   state: {
     query: stateController.query,
     subscribe: stateController.subscribe,

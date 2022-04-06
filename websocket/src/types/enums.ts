@@ -10,6 +10,7 @@ export enum Method {
   MARKET_DEALS = 'market.deals',
   MARKET_STATUS = 'market.status',
   MARKET_STATUS_TODAY = 'market.status_today',
+  MARKET_LAST = 'market.last',
 }
 
 export enum KafkaTopic {
