@@ -6,7 +6,7 @@ import { Method } from '../types/enums';
 import { IWsRpcController } from '../types/interfaces';
 import client from '../config/router.config';
 
-class OrderController implements IWsRpcController {
+class AssetController implements IWsRpcController {
   consumer: Consumer;
 
   query(params: any) {
@@ -18,16 +18,16 @@ class OrderController implements IWsRpcController {
   }
 
   async subscribe(params: any, ws: any) {
-    return await subscribeHelper(params, ws);
+    return await subscribeHelper.call(this, params, ws);
   }
 
   update(params: any, ws: any, wss: any): string {
-    return updateHelper(params, ws, wss);
+    return updateHelper.call(this, params, ws, wss);
   }
 
   unsubscribe(): string {
-    return unsubscribeHelper();
+    return unsubscribeHelper.call(this);
   }
 }
 
-export default new OrderController();
+export default new AssetController();

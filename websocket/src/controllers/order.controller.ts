@@ -6,11 +6,15 @@ import { Method } from '../types/enums';
 import { IWsRpcController } from '../types/interfaces';
 import client from '../config/router.config';
 
-class DepthController implements IWsRpcController {
+class OrderController implements IWsRpcController {
   consumer: Consumer;
 
   query(params: any) {
-    return deasyncRequestHelper(Method.ORDER_DEPTH, params, client);
+    return deasyncRequestHelper(Method.ORDER_PENDING, params, client);
+  }
+
+  history(params: any) {
+    return deasyncRequestHelper(Method.ORDER_FINISHED, params, client);
   }
 
   async subscribe(params: any, ws: any) {
@@ -26,4 +30,4 @@ class DepthController implements IWsRpcController {
   }
 }
 
-export default new DepthController();
+export default new OrderController();

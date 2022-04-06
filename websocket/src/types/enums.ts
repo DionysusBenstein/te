@@ -5,6 +5,7 @@ export enum Method {
   ORDER_FINISHED = 'order.finished',
   BALANCE_QUERY = 'balance.query',
   BALANCE_HISTORY = 'balance.history',
+  MARKET_DEALS = 'market.deals',
 }
 
 export enum KafkaTopic {

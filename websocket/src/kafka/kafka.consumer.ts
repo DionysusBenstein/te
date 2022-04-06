@@ -14,7 +14,7 @@ class KafkaConsumer {
     });
   }
 
-  async subscribe(topic: string, eachMessage): Consumer {
+  async subscribe(topic: string, eachMessage): Promise<Consumer> {
     try {
       const groupId: string = uuidv4();
       const consumer: Consumer = this.kafka.consumer({ groupId });

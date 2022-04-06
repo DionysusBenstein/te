@@ -1,6 +1,6 @@
 import depthController from './controllers/depth.controller';
-import orderController from './controllers/order.contoller';
-import assetController from './controllers/asset.contoller';
+import orderController from './controllers/order.controller';
+import assetController from './controllers/asset.controller';
 
 export const methods = {
   kline: {},
