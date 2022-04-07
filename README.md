@@ -13,3 +13,7 @@ Typical exchanges use relational database for their trade matching machine. The 
 - PostgerSQL: For saving operation log, user balance history, order history and trade history.
 - Redis: is for saving market data.
 - Kafka: A message system.
+
+# Documentation
+- [Globiance BeeJee Team in Postman](https://www.postman.com/universal-space-221980/workspace/globiance-beejee-team)
+- [Overall architecture docs](https://code.dev.beejee.org/Globiance/Trading_Engine/src/master/docs/docs.md)
