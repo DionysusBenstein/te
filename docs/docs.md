@@ -262,7 +262,7 @@ To see logs of specific service in background mode use command:
 ### Start in dev mode
 To start services in development mode with nodemon just run 
 ```bash
-docker-compose -f docker-compose-dev.yml
+docker-compose -f docker-compose-dev.yml up -d
 ```
 <a name="stop"></a>
 ### Stop the system
