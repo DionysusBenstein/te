@@ -6,14 +6,16 @@ import {
   IsNotEmpty,
   Min,
   IsIn,
+  IsUUID
 } from 'class-validator';
 import { getMarketList } from '../utils/config.util';
 
 export class PendingParams {
-  @IsInt()
   @Expose()
-  @IsPositive()
-  user_id: number;
+  @IsString()
+  @IsNotEmpty()
+  @IsUUID('4')
+  user_id: string;
 
   @Expose()
   @IsString()

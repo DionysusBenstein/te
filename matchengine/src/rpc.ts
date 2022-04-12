@@ -2,6 +2,7 @@ import assetController from './controllers/asset.controller';
 import marketController from './controllers/market.controller';
 import balanceController from './controllers/balance.controller';
 import orderController from './controllers/order.controller';
+import orderService from './services/order.service';
 
 export const methods = {
   asset: {
@@ -55,6 +56,10 @@ export const methods = {
     async pending_detail(args, callback) {
       callback(null, await orderController.pending_detail(args));
     },
+
+    settle_book(args, callback) {
+      callback(null, orderService.getSettleBookSize());
+    }
   },
 
   market: {

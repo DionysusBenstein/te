@@ -1,21 +1,23 @@
 import { Expose } from 'class-transformer';
 import {
-  IsInt,
+  IsUUID,
   IsNumber,
   IsNotEmpty,
   IsString,
   IsEnum,
   IsPositive,
+  Min,
   IsIn,
 } from 'class-validator';
 import { getMarketList } from '../utils/config.util';
 import { OrderSide } from '../types/enums';
 
 export class PutMarketParams {
-  @IsInt()
   @Expose()
-  @IsPositive()
-  user_id: number;
+  @IsString()
+  @IsNotEmpty()
+  @IsUUID('4')
+  user_id: string;
 
   @Expose()
   @IsEnum(OrderSide)
@@ -35,11 +37,11 @@ export class PutMarketParams {
 
   @Expose()
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   taker_fee: number;
 
   @Expose()
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   maker_fee: number;
 }

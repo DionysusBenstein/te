@@ -1,18 +1,18 @@
 import { Expose } from 'class-transformer';
 import {
-  IsInt,
   IsString,
   IsNotEmpty,
-  IsPositive,
+  IsUUID,
   IsIn
 } from 'class-validator';
 import { getMarketList } from '../utils/config.util';
 
 export class CancelParams {
   @Expose()
-  @IsInt()
-  @IsPositive()
-  user_id: number;
+  @IsString()
+  @IsNotEmpty()
+  @IsUUID('4')
+  user_id: string;
   
   @Expose()
   @IsString()

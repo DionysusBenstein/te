@@ -14,18 +14,18 @@ export enum OrderType {
   MARKET = 'market',
 }
 
-export enum OrderStatus {
-  NEW = 'new',
-  SUSPENDED = 'suspended',
-  CANCELED = 'canceled',
-  EXPIRED = 'expired',
-  PARTIALLY_FILLED = 'partiallyFilled',
-  FILLED = 'filled',
-}
+// export enum OrderStatus {
+//   NEW = 'new',
+//   SUSPENDED = 'suspended',
+//   CANCELED = 'canceled',
+//   EXPIRED = 'expired',
+//   PARTIALLY_FILLED = 'partiallyFilled',
+//   FILLED = 'filled',
+// }
 
 export enum BalanceType {
   FREEZE = 'freeze',
-  AVAILABLE = 'available',
+  AVAILABLE = 'available'
 }
 
 export enum OrderEvent {
@@ -38,4 +38,9 @@ export enum KafkaTopic {
   DEALS = 'deals',
   ORDERS = 'orders',
   BALANCES = 'balances',
+}
+
+export enum MarketRole {
+  MAKER = 'maker',
+  TAKER = 'taker',
 }

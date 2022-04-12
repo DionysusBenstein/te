@@ -2,7 +2,7 @@ import express from 'express';
 import 'dotenv/config';
 import _ from 'lodash';
 import jayson from 'jayson';
-import { connect } from './kafka/kafka.producer';
+import kafkaProducer from './kafka/kafka.producer';
 import { methods } from './rpc';
 import { collapse } from './utils/rpc.util';
 
@@ -11,7 +11,7 @@ const port = process.env.PORT || 3001;
 
 app.use(express.json());
 
-connect(); // kafka connection
+kafkaProducer.connect();
 
 const map = _.reduce(methods, collapse('', '.'), {});
 

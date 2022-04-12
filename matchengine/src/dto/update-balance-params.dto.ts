@@ -6,15 +6,17 @@ import {
   IsEnum,
   IsPositive,
   IsIn,
+  IsUUID
 } from 'class-validator';
 import { getAssetList } from '../utils/config.util';
 import { BusinessEnum } from '../types/enums';
 
 export class UpdateBalanceParams {
-  @IsInt()
   @Expose()
-  @IsPositive()
-  user_id: number;
+  @IsString()
+  @IsNotEmpty()
+  @IsUUID('4')
+  user_id: string;
 
   @Expose()
   @IsInt()

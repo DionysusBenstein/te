@@ -1,6 +1,6 @@
 CREATE TABLE order_history (
     "id"             uuid NOT NULL PRIMARY KEY,
-    "user_id"        SERIAL NOT NULL,
+    "user_id"        uuid NOT NULL,
 
     "type"           VARCHAR(6) NOT NULL,
     "side"           VARCHAR(3) NOT NULL,
@@ -20,11 +20,10 @@ CREATE TABLE order_history (
 
 CREATE TABLE deal_history (
     "id"             uuid NOT NULL PRIMARY KEY,
-    "user_id"        SERIAL NOT NULL,
-    "deal_id"        uuid NOT NULL,
+    "user_id"        uuid NOT NULL,
     "order_id"       uuid NOT NULL,
     "deal_order_id"  uuid NOT NULL,
-    "role"           SMALLINT NOT NULL,
+    "role"           VARCHAR(5) NOT NULL,
     "price"          DECIMAL(30,8) NOT NULL,
     "amount"         DECIMAL(30,8) NOT NULL,
     "deal"           DECIMAL(30,16) NOT NULL,
@@ -35,7 +34,7 @@ CREATE TABLE deal_history (
 
 CREATE TABLE balance_history (
     "id"             uuid NOT NULL PRIMARY KEY,
-    "user_id"        SERIAL NOT NULL,
+    "user_id"        uuid NOT NULL,
     "balance"        DECIMAL(30,16) NOT NULL,
     "change"         DECIMAL(30,8) NOT NULL,
     "asset"          VARCHAR(4) NOT NULL,

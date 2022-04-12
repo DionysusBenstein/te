@@ -5,6 +5,7 @@ export async function subscribeHelper(params: any, ws: any) {
   const self = this;
 
   const consumer = await kafkaConsumer.subscribe(
+    // TODO: subscribe to a another topics dynamically
     KafkaTopic.ORDERS,
     (result) => {
       console.log(`Message ${result.message.value}`);

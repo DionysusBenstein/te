@@ -4,7 +4,7 @@ import config from '../config/kafka.config';
 
 class KafkaProducer {
   kafka: Kafka;
-  producer: Producer
+  producer: Producer;
 
   constructor(kafkaConfig: KafkaConfig) {
     const { clientId, brokers } = kafkaConfig;
@@ -25,7 +25,7 @@ class KafkaProducer {
       console.error(`ERROR::PRODUCER:: ${err}`);
     }
   }
-  
+
   async pushMessage(topic: string, value: string) {
     try {
       const result = await this.producer.send({

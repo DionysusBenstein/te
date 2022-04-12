@@ -1,7 +1,7 @@
 import { pool } from '../config/database.config';
 import { QueryResult } from 'pg';
-import { Order, Balance } from '../types/types';
-import { getCurrentTimestamp } from '../utils/time.util';
+import { Order, Deal, Balance } from '../types/types';
+import { v4 as uuidv4 } from 'uuid';
 
 class Queries {
   async getOrderHistory(userId: number, asset: string) {
@@ -33,7 +33,7 @@ class Queries {
     deal_fee,
     create_time,
     finish_time,
-  }: Order): Promise<Order[]>{
+  }: Order): Promise<Order[]> {
     try {
       const queryString: string = `
         INSERT INTO "order_history" (
@@ -55,7 +55,7 @@ class Queries {
         VALUES            
           (
             '${id}',
-            ${user_id},
+            '${user_id}',
             '${type}',
             '${side}',
             ${price},
@@ -79,11 +79,63 @@ class Queries {
     }
   }
 
-  async updateOrder(order_id: string): Promise<Order[]>{
+  async appendDealHistory({
+    id,
+    user_id,
+    order_id,
+    deal_order_id,
+    role,
+    price,
+    amount,
+    deal,
+    fee,
+    deal_fee,
+    time,
+  }: Deal): Promise<Deal[]> {
+    try {
+      const queryString: string = `
+        INSERT INTO "deal_history" (
+          "id",
+          "user_id",
+          "order_id",
+          "deal_order_id",
+          "role",
+          "price",
+          "amount",
+          "deal",
+          "fee",
+          "deal_fee",
+          "time"
+        )
+        VALUES            
+          (
+            '${id}',
+            '${user_id}',
+            '${order_id}',
+            '${deal_order_id}',
+            '${role}',
+            ${price},
+            ${amount},
+            ${deal},
+            ${fee},
+            ${deal_fee},
+            '${time}'
+          )`;
+
+      const response: QueryResult = await pool.query(queryString);
+
+      return response;
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  async updateOrder(order_id: string, finish_time: string): Promise<Order[]> {
     try {
       const queryString: string = `
       UPDATE "order_history"
-      SET finish_time = '${getCurrentTimestamp()}',
+      SET finish_time = '${finish_time}'
       WHERE id = '${order_id}';`;
 
       const response: QueryResult = await pool.query(queryString);
@@ -95,10 +147,10 @@ class Queries {
     }
   }
 
-  async getBalanceHistory(user_id: number, assets: string[]) {
-    try {      
+  async getBalanceHistory(user_id: string, assets: string[]): Promise<Balance[]> {
+    try {
       const response: QueryResult = await pool.query(
-        'SELECT * FROM balance_history WHERE ($1::int IS NULL OR user_id=$1) AND asset = ANY($2)',
+        'SELECT * FROM balance_history WHERE ($1::uuid IS NULL OR user_id=$1) AND asset = ANY($2)',
         [user_id, [...assets]]
       );
 
@@ -109,10 +161,10 @@ class Queries {
     }
   }
 
-  async getLastBalance(user_id: number, assets: string) {
+  async getLastBalance(user_id: string, assets: string[]): Promise<Balance> {
     try {
       const response: QueryResult = await pool.query(
-        'SELECT * FROM balance_history WHERE user_id = $1 AND asset = $2 ORDER BY time DESC LIMIT 1',
+        'SELECT * FROM balance_history WHERE user_id = $1 AND asset = ANY($2) ORDER BY time DESC LIMIT 1',
         [user_id, assets]
       );
 
@@ -123,38 +175,23 @@ class Queries {
     }
   }
 
-  async updateBalance({
-    id,
+  async appendBalanceHistory({
     user_id,
     time,
     asset,
     business,
     change,
     balance,
-    detail
+    detail,
   }: Balance) {
     try {
       const queryString: string = `
-                INSERT INTO balance_history (id, user_id, time, asset, business, change, balance, detail)
-                VALUES ('${id}', ${user_id}, '${time}', '${asset}', '${business}', ${change}, ${balance}, '${detail}');
-            `;
+          INSERT INTO balance_history (id, user_id, time, asset, business, change, balance, detail)
+          VALUES ('${uuidv4()}', '${user_id}', '${time}', '${asset}', '${business}', ${change}, ${balance}, '${detail}');
+      `;
+
       const response: QueryResult = await pool.query(queryString);
-
       return response;
-    } catch (err) {
-      console.log(err);
-      return err;
-    }
-  }
-
-  async getBalanceSlice(asset: string) {
-    try {
-      const response: QueryResult = await pool.query(
-        'SELECT * FROM slice_balance WHERE asset = $1',
-        [asset]
-      );
-
-      return response.rows;
     } catch (err) {
       console.log(err);
       return err;

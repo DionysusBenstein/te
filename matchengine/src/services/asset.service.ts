@@ -1,5 +1,5 @@
 import config from '../config/matchengine.config';
-import { Asset, Balance } from '../types/types';
+import { Balance } from '../types/types';
 import db from '../database/queries';
 
 class AssetService {
@@ -13,13 +13,14 @@ class AssetService {
     for (const asset of assets) {
       const balanceHistory = await db.getBalanceHistory(null, [asset]);
 
-      let total_balance = balanceHistory.reduce(
+      let total_balance: number = balanceHistory.reduce(
         (acc: number, item: Balance) => acc + +item.balance,
         0
       );
+
       const available_count = balanceHistory.length;
 
-      total_balance = total_balance.toFixed(16);
+      total_balance = +total_balance.toFixed(16);
 
       const summary = {
         name: asset.name,

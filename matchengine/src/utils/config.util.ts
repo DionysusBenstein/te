@@ -7,3 +7,10 @@ export function getAssetList() {
 export function getMarketList() {
   return config.markets.map((market) => market.name);
 }
+
+export function getAssetConfigByName(assetName: string) {
+  const asset = config.assets.find(
+    (asset) => asset.name === assetName
+  );
+  return asset;
+}

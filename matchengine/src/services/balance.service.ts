@@ -1,8 +1,8 @@
 import { BalanceQueryParams } from '../dto/balance-query-params.dto';
 import { UpdateBalanceParams } from '../dto/update-balance-params.dto';
 import { getCurrentTimestamp } from '../utils/time.util';
+import { getAssetConfigByName } from '../utils/config.util';
 import { Balance } from '../types/types';
-import { v4 as uuidv4 } from 'uuid';
 import db from '../database/queries';
 
 class BalanceService {
@@ -16,52 +16,21 @@ class BalanceService {
 
   freezeBalance() {}
 
-  async getStatus(assetName: string) {
-    const balanceSlice = await db.getBalanceSlice(assetName);
-    const status = {
-      name: '',
-      totalBalance: 0,
-      availableBalance: 0,
-      availableCount: 0,
-      freezeBalance: 0,
-      freezeCount: 0,
-    };
+  async query({ user_id, assets, ...params }: BalanceQueryParams) {
+    const result: any = [];
 
-    const result = balanceSlice.reduce((acc, slice) => {
-      if (slice.type == 'freeze') {
-        acc.freezeCount += 1;
-        acc.freezeBalance += +slice.balance;
-      } else {
-        acc.availableCount += 1;
-        acc.availableBalance += +slice.balance;
-      }
+    for (const asset of assets) {
+      const { balance } = await db.getLastBalance(user_id, [asset]);
 
-      acc.name = assetName;
-      acc.totalBalance += +slice.balance;
-
-      return acc;
-    }, status);
+      result.push({
+        [asset]: {
+          available: balance,
+          freeze: 0,
+        },
+      });
+    }
 
     return result;
-  }
-
-  async query({ user_id, assets, ...params }: BalanceQueryParams) {
-    const response = await db.getBalanceHistory(user_id, assets);
-    const { asset, balance } = response[0];
-
-    const available = response.reduce(
-      (acc: number, item: Balance) => acc + +item.balance,
-      0
-    );
-
-    const resObj = {
-      [asset]: {
-        available: available.toFixed(16),
-        freeze: balance,
-      },
-    };
-
-    return resObj;
   }
 
   async update({
@@ -82,7 +51,6 @@ class BalanceService {
     const balance: number = +lastBalance + change;
     const time = getCurrentTimestamp();
     const newBalance = {
-      id: uuidv4(),
       user_id,
       time,
       asset,
@@ -92,7 +60,7 @@ class BalanceService {
       detail,
     };
 
-    await db.updateBalance(newBalance);
+    await db.appendBalanceHistory(newBalance);
 
     return { newBalance: newBalance };
   }
