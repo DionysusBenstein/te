@@ -21,6 +21,8 @@ export const redirects = {
     pending: redirect(services.matchengine),
     finished: redirect(services.readhistory),
     finished_detail: redirect(services.readhistory),
+    // temp
+    settle_book: redirect(services.matchengine),
   },
   market: {
     last: redirect(services.marketprice),

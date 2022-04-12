@@ -34,7 +34,7 @@ services:
 
   redis:
     image: redis
-    container_name: redis1
+    container_name: redis
     restart: unless-stopped
     network_mode: bridge
     volumes:
@@ -44,6 +44,7 @@ services:
       
   postgres:
     container_name: postgres
+    hostname: zookeeper
     image: postgres
     ports:
       - 5432:5432
