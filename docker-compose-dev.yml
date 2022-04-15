@@ -60,6 +60,8 @@ services:
   marketprice:
     container_name: marketprice
     build: ./marketprice
+    environment:
+      - NODE_ENV=development
     env_file:
       - marketprice/.env
     volumes:
@@ -76,6 +78,8 @@ services:
   matchengine:
     container_name: matchengine
     build: ./matchengine
+    environment:
+      - NODE_ENV=development
     env_file:
       - matchengine/.env
     volumes:
@@ -91,6 +95,8 @@ services:
   readhistory:
     container_name: readhistory
     build: ./readhistory
+    environment:
+      - NODE_ENV=development
     env_file:
       - readhistory/.env
     volumes:
@@ -104,6 +110,8 @@ services:
   router:
     container_name: router
     build: ./router
+    environment:
+      - NODE_ENV=development
     env_file:
       - router/.env
     volumes:
@@ -117,6 +125,8 @@ services:
   websocket:
     container_name: websocket
     build: ./websocket
+    environment:
+      - NODE_ENV=development
     env_file:
       - websocket/.env
     volumes:
