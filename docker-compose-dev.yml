@@ -35,8 +35,8 @@ services:
   redis:
     image: redis
     container_name: redis
+    hostname: redis
     restart: unless-stopped
-    network_mode: bridge
     volumes:
       - ./redis:/data
     ports:
