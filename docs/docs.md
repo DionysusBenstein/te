@@ -161,10 +161,10 @@ An arbitrary detail info passed alongside with the balance change operation requ
 
 Most important fields:
 
-A time the order has been opened and either completed or canceled
+A time the order has been opened and either filled or canceled
 ```
 "create_time" TIMESTAMP NOT NULL,
-"finish_time" TIMESTAMP NOT NULL,
+"update_time" TIMESTAMP NOT NULL,
 ```
 
 An id of the user who created the order
@@ -193,12 +193,6 @@ The total amount of the assets (i.e. price * quantity) used for the order
 
 ```
 "amount" DECIMAL(30,8) NOT NULL,
-```
-
-The fees
-```
-"taker_fee" DECIMAL(30,4) NOT NULL,
-"maker_fee" DECIMAL(30,4) NOT NULL,
 ```
 
 An amounts of the deal is the amount of the order minus the fee(s) expressed in stock amd money currency
