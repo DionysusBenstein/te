@@ -2,82 +2,128 @@ version: "3.9"
 
 services:
   zookeeper:
-    image: docker.io/bitnami/zookeeper:3.7
+    container_name: zookeeper
+    image: zookeeper
+    hostname: zookeeper
     ports:
-      - "2181:2181"
-    volumes:
-      - "zookeeper_data:/bitnami"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+      - 2181:2181
+
   kafka:
-    image: docker.io/bitnami/kafka:3.1
+    image: ches/kafka
+    container_name: kafka
+    hostname: kafka
     ports:
-      - "9092:9092"
-    volumes:
-      - "kafka_data:/bitnami"
+      - 9092:9092
     environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      ZOOKEEPER_IP: zookeeper
     depends_on:
       - zookeeper
+
   redis:
     image: redis
     container_name: redis
+    hostname: redis
     restart: unless-stopped
-    network_mode: bridge
     volumes:
-      - ./redis:/data
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis.conf
     ports:
-      - "6379:6379"
+      - 6379:6379
+    command: redis-server /usr/local/etc/redis.conf
+      
   postgres:
+    container_name: postgres
+    hostname: postgres
     image: postgres
     ports:
-      - "5432:5432"
+      - 5432:5432
     volumes:
-      - ./postgres:/docker-entrypoint-initdb.d
-      - ./postgres:/var/lib/postgresql/data
+      - ./postgres/scripts:/docker-entrypoint-initdb.d
+      - ./postgres/pgdata:/var/lib/postgresql/pgdata
     environment:
-      POSTGRES_DB: exchange_db
+      POSTGRES_DB: trade_history
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: b7Mg4UmK
-      PGDATA: "/var/postgresql/data/pgdata"
+      PGDATA: /var/lib/postgresql/pgdata
 
   marketprice:
+    container_name: marketprice
     build: ./marketprice
+    environment:
+      - NODE_ENV=production
     env_file:
       - marketprice/.env
     volumes:
-      - ./marketprice:/var/marketprice/www
+      - ./marketprice:/usr/src/marketprice
+      - /usr/src/marketprice/node_modules
     ports:
-      - "3000:3000"
-    networks:
-      - main-networks
+      - 3000:3000
+    depends_on:
+      - zookeeper
+      - kafka
     restart: always
     command: npm start
 
   matchengine:
+    container_name: matchengine
     build: ./matchengine
+    environment:
+      - NODE_ENV=production
     env_file:
       - matchengine/.env
     volumes:
-      - ./matchengine:/var/matchengine/www
+      - ./matchengine:/usr/src/matchengine
+      - /usr/src/matchengine/node_modules
     ports:
-      - "3001:3001"
-    networks:
-      - main-networks
+      - 3001:3001
+    depends_on:
+      - kafka
     restart: always
     command: npm start
 
   readhistory:
+    container_name: readhistory
     build: ./readhistory
+    environment:
+      - NODE_ENV=production
     env_file:
       - readhistory/.env
     volumes:
-      - ./readhistory:/var/readhistory/www
+      - ./readhistory:/usr/src/readhistory
+      - /usr/src/readhistory/node_modules
     ports:
-      - "3002:3002"
-    networks:
-      - main-networks
+      - 3002:3002
+    restart: always
+    command: npm start
+
+  router:
+    container_name: router
+    build: ./router
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - router/.env
+    volumes:
+      - ./router:/usr/src/router
+      - /usr/src/router/node_modules
+    ports:
+      - 3003:3003
+    restart: always
+    command: npm start
+
+  websocket:
+    container_name: websocket
+    build: ./websocket
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - websocket/.env
+    volumes:
+      - ./websocket:/usr/src/websocket
+      - /usr/src/websocket/node_modules
+    ports:
+      - 3031:3031
     restart: always
     command: npm start
 
@@ -87,6 +133,3 @@ volumes:
   kafka_data:
     driver: local
   pg-dataset:
-networks:
-  main-networks:
-    driver: bridge
