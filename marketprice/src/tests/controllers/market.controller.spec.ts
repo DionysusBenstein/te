@@ -13,11 +13,11 @@ import {
 
 describe("MarketController", () => {
   const marketController = new MarketController({
-    getLast: (props) => new Promise((resolve) => resolve(marketLastMock)),
-    getDeals: (props) => new Promise((resolve) => resolve(marketDealsMock)),
-    getStatus: (props) => new Promise((resolve) => resolve(marketStatusMock)),
-    getStatusToday: (props) =>
-      new Promise((resolve) => resolve(marketStatusTodayMock)),
+    // getLast: (props) => new Promise((resolve) => resolve(marketLastMock)),
+    // getDeals: (props) => new Promise((resolve) => resolve(marketDealsMock)),
+    // getStatus: (props) => new Promise((resolve) => resolve(marketStatusMock)),
+    // getStatusToday: (props) =>
+    //   new Promise((resolve) => resolve(marketStatusTodayMock)),
   } as MarketService);
 
   describe("MarketController.last", () => {
@@ -44,7 +44,7 @@ describe("MarketController", () => {
     it("should return deals", async () => {
       const params: MarketDealsParams = {
         market: "BTC",
-        last_id: 2,
+        offset: 0,
         limit: 4,
       };
 

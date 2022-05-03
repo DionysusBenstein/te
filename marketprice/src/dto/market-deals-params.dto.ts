@@ -1,5 +1,5 @@
 import { Expose } from "class-transformer";
-import { IsInt, IsNotEmpty, IsPositive, IsString, Max } from "class-validator";
+import { IsInt, IsNotEmpty, IsPositive, IsString, Max, Min } from "class-validator";
 
 export class MarketDealsParams {
   @Expose()
@@ -15,6 +15,6 @@ export class MarketDealsParams {
   
   @Expose()
   @IsInt()
-  @IsPositive()
-  last_id: number;
+  @Min(0)
+  offset: number;
 }

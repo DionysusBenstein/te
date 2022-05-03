@@ -44,18 +44,18 @@ describe("MarketService", () => {
     it("should return deals", async () => {
       const params: MarketDealsParams = {
         market: "BTC",
-        last_id: 2,
+        offset: 0,
         limit: 4,
       };
 
       expect(await marketService.getDeals(params)).toStrictEqual(
-        marketDealsMock.slice(params.last_id, params.limit + params.last_id)
+        marketDealsMock.slice(params.offset, params.limit + params.offset)
       );
     });
     it("should return null", async () => {
       const params = {
         market: "non existing market",
-        last_id: 2,
+        offset: 0,
         limit: 4,
       } as any;
 
@@ -77,7 +77,7 @@ describe("MarketService", () => {
     it("should return null", async () => {
       const params = {
         market: "non existing market",
-        last_id: 2,
+        offset: 0,
         limit: 4,
       } as any;
 
