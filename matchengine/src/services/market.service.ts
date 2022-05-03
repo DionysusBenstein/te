@@ -8,7 +8,7 @@ class MarketService {
 
   async summary({ markets }) {
     const result = [];
-
+    // TODO: Needs to refactor
     for (const market of markets) {
       const summary = orderService.getMarketStatus(market);
       result.push(summary)

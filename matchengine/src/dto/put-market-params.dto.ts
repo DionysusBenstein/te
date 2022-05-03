@@ -10,7 +10,7 @@ import {
   IsIn,
 } from 'class-validator';
 import { getMarketList } from '../utils/config.util';
-import { OrderSide } from '../types/enums';
+import { OrderSide } from '../typings/enums';
 
 export class PutMarketParams {
   @Expose()
@@ -35,13 +35,7 @@ export class PutMarketParams {
   @IsPositive()
   amount: number;
 
-  @Expose()
   @IsNumber()
   @Min(0)
-  taker_fee: number;
-
-  @Expose()
-  @IsNumber()
-  @Min(0)
-  maker_fee: number;
+  total_fee: number;
 }

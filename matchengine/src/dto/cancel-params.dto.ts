@@ -23,6 +23,7 @@ export class CancelParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
+  @IsUUID('4')
   order_id: string;
 
 }

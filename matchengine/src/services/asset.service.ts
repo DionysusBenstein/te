@@ -1,5 +1,5 @@
 import config from '../config/matchengine.config';
-import { Balance } from '../types/types';
+import { Balance } from '../typings/types';
 import db from '../database/queries';
 
 class AssetService {

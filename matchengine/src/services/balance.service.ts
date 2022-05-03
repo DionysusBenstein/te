@@ -2,7 +2,7 @@ import { BalanceQueryParams } from '../dto/balance-query-params.dto';
 import { UpdateBalanceParams } from '../dto/update-balance-params.dto';
 import { getCurrentTimestamp } from '../utils/time.util';
 import { getAssetConfigByName } from '../utils/config.util';
-import { Balance } from '../types/types';
+import { Balance } from '../typings/types';
 import db from '../database/queries';
 
 class BalanceService {

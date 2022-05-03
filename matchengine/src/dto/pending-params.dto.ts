@@ -19,8 +19,7 @@ export class PendingParams {
 
   @Expose()
   @IsString()
-  @IsNotEmpty()
-  @IsIn(getMarketList())
+  @IsIn(['', ...getMarketList()])
   market: string;
 
   @Expose()

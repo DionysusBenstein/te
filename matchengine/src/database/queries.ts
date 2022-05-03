@@ -1,38 +1,24 @@
 import { pool } from '../config/database.config';
 import { QueryResult } from 'pg';
-import { Order, Deal, Balance } from '../types/types';
+import { Order, Deal, Balance } from '../typings/types';
 import { v4 as uuidv4 } from 'uuid';
 
 class Queries {
-  async getOrderHistory(userId: number, asset: string) {
-    try {
-      const response: QueryResult = await pool.query(
-        'SELECT * FROM order_history WHERE userId = $1 AND asset = $2',
-        [userId, asset]
-      );
-
-      return response.rows;
-    } catch (err) {
-      console.log(err);
-      return err;
-    }
-  }
-
   async appendOrderHistory({
     id,
     user_id,
     type,
     side,
+    market,
+    status,
     price,
     amount,
-    market,
-    taker_fee,
-    maker_fee,
+    total,
+    total_fee,
     deal_money,
     deal_stock,
-    deal_fee,
     create_time,
-    finish_time,
+    update_time,
   }: Order): Promise<Order[]> {
     try {
       const queryString: string = `
@@ -41,16 +27,16 @@ class Queries {
           "user_id",
           "type",
           "side",
+          "market",
+          "status",
           "price",
           "amount",
-          "market",
+          "total",
           "deal_money",
           "deal_stock",
-          "taker_fee",
-          "maker_fee",
-          "deal_fee",
+          "total_fee",
           "create_time",
-          "finish_time"
+          "update_time"
         )
         VALUES            
           (
@@ -58,16 +44,16 @@ class Queries {
             '${user_id}',
             '${type}',
             '${side}',
+            '${market}',
+            '${status}',
             ${price},
             ${amount},
-            '${market}',
+            ${total},
             ${deal_money},
             ${deal_stock},
-            ${taker_fee},
-            ${maker_fee},
-            ${deal_fee},
+            ${total_fee},
             '${create_time}',
-            '${finish_time}'
+            '${update_time}'
           )`;
 
       const response: QueryResult = await pool.query(queryString);
@@ -84,9 +70,11 @@ class Queries {
     user_id,
     order_id,
     deal_order_id,
+    market,
     role,
     price,
     amount,
+    total,
     deal,
     fee,
     deal_fee,
@@ -99,9 +87,11 @@ class Queries {
           "user_id",
           "order_id",
           "deal_order_id",
+          "market",
           "role",
           "price",
           "amount",
+          "total",
           "deal",
           "fee",
           "deal_fee",
@@ -113,9 +103,11 @@ class Queries {
             '${user_id}',
             '${order_id}',
             '${deal_order_id}',
+            '${market}',
             '${role}',
             ${price},
             ${amount},
+            ${total},
             ${deal},
             ${fee},
             ${deal_fee},
@@ -131,12 +123,15 @@ class Queries {
     }
   }
 
-  async updateOrder(order_id: string, finish_time: string): Promise<Order[]> {
+  async updateOrder(order: Order, updateTime: string): Promise<Order[]> {
     try {
       const queryString: string = `
-      UPDATE "order_history"
-      SET finish_time = '${finish_time}'
-      WHERE id = '${order_id}';`;
+        UPDATE "order_history"
+        SET
+          status = '${order.status}',
+          update_time = '${updateTime}'
+        WHERE id = '${order.id}'
+      ;`;
 
       const response: QueryResult = await pool.query(queryString);
 
@@ -147,7 +142,10 @@ class Queries {
     }
   }
 
-  async getBalanceHistory(user_id: string, assets: string[]): Promise<Balance[]> {
+  async getBalanceHistory(
+    user_id: string,
+    assets: string[]
+  ): Promise<Balance[]> {
     try {
       const response: QueryResult = await pool.query(
         'SELECT * FROM balance_history WHERE ($1::uuid IS NULL OR user_id=$1) AND asset = ANY($2)',

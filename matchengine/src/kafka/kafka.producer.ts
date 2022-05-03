@@ -26,13 +26,13 @@ class KafkaProducer {
     }
   }
 
-  async pushMessage(topic: string, value: string) {
+  async pushMessage(topic: string, event: string, value=null) {
     try {
       const result = await this.producer.send({
         topic,
-        messages: [{ value }],
+        messages: [{ key: event, value: JSON.stringify(value) }],
       });
-      console.log(`Sent Successfully! ${JSON.stringify(result)}`);
+      console.log(`Sent Successfully! : ${event} : ${value} : ${JSON.stringify(result)}`);
     } catch (err) {
       console.error(`ERROR::PRODUCER:: ${err}`);
     }

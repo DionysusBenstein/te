@@ -64,7 +64,7 @@ export const methods = {
 
   market: {
     async list(args, callback) {
-      callback(null, marketController.list());
+      callback(null, await marketController.list());
     },
 
     async summary(args, callback) {

@@ -6,6 +6,7 @@ import { PendingDetailParams } from '../dto/pending-detail-params.dto';
 import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 import { validateAndConvert } from '../utils/validation.util';
+import { Order } from '../typings/types';
 import orderService from '../services/order.service';
 
 class OrderController {
@@ -19,7 +20,12 @@ class OrderController {
       };
     }
 
-    return await orderService.putLimit(data);
+    const order: Order = await orderService.putLimit(data);
+
+    return {
+      status: 'ok',
+      order
+    }
   }
 
   async putMarket(params: PutMarketParams) {
@@ -32,7 +38,12 @@ class OrderController {
       };
     }
 
-    return await orderService.putMarket(data);
+    const order: any = await orderService.putMarket(data);
+
+    return {
+      status: 'ok',
+      order
+    }
   }
 
   async cancel(params: CancelParams) {

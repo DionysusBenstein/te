@@ -9,7 +9,7 @@ import {
   IsUUID
 } from 'class-validator';
 import { getAssetList } from '../utils/config.util';
-import { BusinessEnum } from '../types/enums';
+import { BusinessEnum } from '../typings/enums';
 
 export class UpdateBalanceParams {
   @Expose()

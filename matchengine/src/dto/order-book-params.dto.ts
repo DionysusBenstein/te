@@ -8,7 +8,7 @@ import {
   IsIn,
   Min,
 } from 'class-validator';
-import { OrderSide } from '../types/enums';
+import { OrderSide } from '../typings/enums';
 import { getMarketList } from '../utils/config.util';
 
 export class OrderBookParams {
