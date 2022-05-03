@@ -5,16 +5,16 @@ export type Order = {
   user_id: string;
   type: OrderType;
   side: OrderSide;
+  market: string;
+  status: string;
   price?: number;
   amount: number;
-  market: string;
-  taker_fee: number;
-  maker_fee: number;
+  total?: number;
+  total_fee: number;
   deal_money: number;
   deal_stock: number;
-  deal_fee: number;
   create_time: string;
-  finish_time: string;
+  update_time: string;
 };
 
 export type Deal = {
@@ -22,21 +22,15 @@ export type Deal = {
   user_id: string;
   order_id: string;
   deal_order_id: string;
+  market: string;
   role: MarketRole;
   price: number;
   amount: number;
+  total: number;
   deal: number;
   fee: number;
   deal_fee: number;
   time: string;
-};
-
-export type Market = {
-  name: string;
-  money: string;
-  stock: string;
-  asks: Order[];
-  bids: Order[];
 };
 
 export type Balance = {
@@ -49,9 +43,27 @@ export type Balance = {
   time: string;
 };
 
-export type Asset = {
-  id: string;
+export type Market = {
   name: string;
-  precSave: number;
-  precShow: number;
+  money: string;
+  stock: string;
+  asks: Order[];
+  bids: Order[];
+};
+
+export type AssetConfig = {
+  name: string;
+  prec?: number;
+};
+
+export type MarketConfig = {
+  name: string;
+  minAmount: number;
+  stock: string;
+  money: string;
+};
+
+export type MatchEngineConfig = {
+  assets: AssetConfig[];
+  markets: MarketConfig[];
 };

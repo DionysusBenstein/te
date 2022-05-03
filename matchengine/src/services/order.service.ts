@@ -1,3 +1,22 @@
+import { v4 as uuidv4 } from 'uuid';
+import config from '../config/matchengine.config';
+import db from '../database/queries';
+import { getCurrentTimestamp } from '../utils/time.util';
+import {
+  appendOrderDeal,
+  getAllPending,
+  updateOrderHistory,
+} from '../utils/trade.util';
+import kafkaProducer from '../kafka/kafka.producer';
+import { Market, Order, Deal, MatchEngineConfig } from '../typings/types';
+import {
+  OrderSide,
+  OrderType,
+  OrderEvent,
+  OrderStatus,
+  KafkaTopic,
+} from '../typings/enums';
+
 import { PutLimitParams } from '../dto/put-limit-params.dto';
 import { PutMarketParams } from '../dto/put-market-params.dto';
 import { OrderBookParams } from '../dto/order-book-params.dto';
@@ -6,94 +25,170 @@ import { PendingDetailParams } from '../dto/pending-detail-params.dto';
 import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 
-import { v4 as uuidv4 } from 'uuid';
-import config from '../config/matchengine.config';
-import db from '../database/queries';
-import { getCurrentTimestamp } from '../utils/time.util';
-import { appendOrderDeal, appendTradeBalance } from '../utils/trade.util';
-import kafkaProducer from '../kafka/kafka.producer';
-import { Market, Order } from '../types/types';
-import { OrderSide, OrderType, KafkaTopic, OrderEvent } from '../types/enums';
-
 class OrderService {
-  markets: Market[] = [];
+  marketList: Market[] = [];
+  // NOTE: this is property for testing
   settleBookSize: number;
 
-  constructor(config: any) {
+  constructor(config: MatchEngineConfig) {
     for (const marketConf of config.markets) {
       const { name, stock, money } = marketConf;
       this.settleBookSize = 0;
 
       const market: Market = {
         name,
-        stock: stock.name,
-        money: money.name,
+        stock,
+        money,
         asks: [],
         bids: [],
       };
 
-      this.markets.push(market);
+      this.marketList.push(market);
     }
   }
 
   getMarketByName(marketName: string): Market {
-    return this.markets.find((market) => market.name === marketName);
+    return this.marketList.find((market) => market.name === marketName);
   }
 
-  executeAskLimitOrder(order: Order): Order {
-    const { bids, asks }: Market = this.getMarketByName(order.market);
-    let dealOrder: Order;
-
-    for (const [i, bid] of bids.entries()) {
-      if (order.price <= bid.price) {
-        [dealOrder] = bids.splice(i, 1);
-        return dealOrder;
-      }
-    }
+  addAskOrder(order: Order) {
+    const { asks }: Market = this.getMarketByName(order.market);
 
     asks.push(order);
-    return dealOrder;
+
+    let i = asks.length - 1;
+    const ask = asks[i];
+
+    while (i > 0 && ask.price > asks[i - 1].price) {
+      asks[i] = asks[i - 1];
+      i -= 1;
+    }
+
+    asks[i] = ask;
   }
 
-  executeBidLimitOrder(order: Order): Order {
-    const { bids, asks }: Market = this.getMarketByName(order.market);
-    let dealOrder: Order;
+  addBidOrder(order: Order) {
+    const { bids }: Market = this.getMarketByName(order.market);
 
-    for (const [i, ask] of asks.entries()) {
-      if (order.price >= ask.price) {
-        [dealOrder] = asks.splice(i, 1);
-        return dealOrder;
+    bids.push(order);
+
+    let i = bids.length - 1;
+    const bid = bids[i];
+
+    while (i > 0 && bid.price < bids[i - 1].price) {
+      bids[i] = bids[i - 1];
+      i -= 1;
+    }
+
+    bids[i] = bid;
+  }
+
+  async executeAskLimitOrder(order: Order) {
+    const { bids }: Market = this.getMarketByName(order.market);
+    const n: number = bids.length;
+
+    if (n !== 0 && bids[n - 1].price >= order.price) {
+      for (let i = bids.length - 1; i >= 0; i--) {
+        let bidOrder = bids[i];
+
+        if (bidOrder.price < order.price) {
+          break;
+        }
+
+        let dealOrder: Order;
+
+        if (bidOrder.amount >= order.amount) {
+          bidOrder.amount -= order.amount;
+          bidOrder.status = OrderStatus.PARTIALLY;
+
+          if (bidOrder.amount === 0) {
+            bidOrder.status = OrderStatus.COMPLETED;
+            [dealOrder] = bids.splice(i, 1);
+          }
+
+          order.status = OrderStatus.COMPLETED;
+          await updateOrderHistory(order, bidOrder);
+          return dealOrder;
+        }
+
+        if (bidOrder.amount < order.amount) {
+          order.amount -= bidOrder.amount;
+          bids.splice(i, 1);
+          order.status = OrderStatus.PARTIALLY;
+          bidOrder.status = OrderStatus.COMPLETED;
+          await updateOrderHistory(order, bidOrder);
+          continue;
+        }
       }
     }
 
-    bids.push(order);
-    return dealOrder;
+    this.addAskOrder(order);
   }
 
-  executeAskMarketOrder(order: Order): boolean {
+  async executeBidLimitOrder(order: Order) {
+    const { asks }: Market = this.getMarketByName(order.market);
+    const n: number = asks.length;
+
+    if (n !== 0 && asks[n - 1].price <= order.price) {
+      for (let i = asks.length - 1; i >= 0; i--) {
+        let askOrder = asks[i];
+
+        if (askOrder.price > order.price) {
+          break;
+        }
+
+        let dealOrder: Order;
+
+        if (askOrder.amount >= order.amount) {
+          askOrder.amount -= order.amount;
+          askOrder.status = OrderStatus.PARTIALLY;
+
+          if (askOrder.amount === 0) {
+            askOrder.status = OrderStatus.COMPLETED;
+            [dealOrder] = asks.splice(i, 1);
+          }
+
+          order.status = OrderStatus.COMPLETED;
+          await updateOrderHistory(order, askOrder);
+          return dealOrder;
+        }
+
+        if (askOrder.amount < order.amount) {
+          order.amount -= askOrder.amount;
+          asks.splice(i, 1);
+          order.status = OrderStatus.PARTIALLY;
+          askOrder.status = OrderStatus.COMPLETED;
+          await updateOrderHistory(order, askOrder);
+          continue;
+        }
+      }
+    }
+
+    this.addBidOrder(order);
+  }
+
+  executeAskMarketOrder(order: Order): Order {
     const { bids }: Market = this.getMarketByName(order.market);
 
     if (bids.length <= 0) {
-      return false;
+      return;
     }
 
     bids.sort((a, b) => b.price - a.price);
-    bids.splice(0, 1);
-
-    return true;
+    const [dealOrder] = bids.splice(0, 1);
+    return dealOrder;
   }
 
-  executeBidMarketOrder(order: Order): boolean {
+  executeBidMarketOrder(order: Order): Order {
     const { asks }: Market = this.getMarketByName(order.market);
 
     if (asks.length <= 0) {
-      return false;
+      return;
     }
 
     asks.sort((a, b) => a.price - b.price);
-    asks.splice(0, 1);
-
-    return true;
+    const [dealOrder] = asks.splice(0, 1);
+    return dealOrder;
   }
 
   async putLimit({
@@ -102,57 +197,50 @@ class OrderService {
     side,
     price,
     amount,
-    taker_fee,
-    maker_fee,
-    ...params
-  }: PutLimitParams) {
-    const { money, stock } = this.getMarketByName(market);
-    const { balance } = await db.getLastBalance(user_id, [money]);
-
-    if (side === OrderSide.BID && balance < amount) {
-      return { message: 'Balance not enough' };
-    }
-
+    total_fee,
+  }: PutLimitParams): Promise<Order> {
     const order: Order = {
       id: uuidv4(),
       user_id,
       type: OrderType.LIMIT,
       side,
+      market,
       price,
       amount,
-      market,
-      taker_fee,
-      maker_fee,
-      deal_money: amount - maker_fee,
-      deal_stock: amount / price - taker_fee,
-      deal_fee: taker_fee + maker_fee,
+      total: amount * price,
+      status: OrderStatus.ACTIVE,
+      total_fee,
+      deal_money: amount - total_fee,
+      deal_stock: amount / price - total_fee,
       create_time: getCurrentTimestamp(),
-      finish_time: 'infinity',
+      update_time: 'infinity',
     };
 
-    await db.appendOrderHistory(order);
+    db.appendOrderHistory(order);
 
     let dealOrder: Order;
     if (side === OrderSide.ASK) {
-      await appendTradeBalance(user_id, -order.deal_money, money);
-      dealOrder = this.executeAskLimitOrder(order);
+      dealOrder = await this.executeAskLimitOrder(order);
     } else {
-      await appendTradeBalance(user_id, -order.deal_stock, stock);
-      dealOrder = this.executeBidLimitOrder(order);
+      dealOrder = await this.executeBidLimitOrder(order);
     }
 
     if (dealOrder) {
-      const finishTimestamp = getCurrentTimestamp();
+      const updateTime = getCurrentTimestamp();
 
-      order.finish_time = finishTimestamp;
-      dealOrder.finish_time = finishTimestamp;
+      order.update_time = updateTime;
+      dealOrder.update_time = updateTime;
 
-      await db.updateOrder(order.id, finishTimestamp);
-      await db.updateOrder(dealOrder.id, finishTimestamp);
+      db.updateOrder(order, updateTime);
+      db.updateOrder(dealOrder, updateTime);
 
-      await appendTradeBalance(dealOrder.user_id, dealOrder.deal_stock, stock);
-      await appendOrderDeal(order, dealOrder);
-      await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH);
+      const deal: Deal = await appendOrderDeal(order, dealOrder);
+
+      await kafkaProducer.pushMessage(
+        KafkaTopic.DEALS,
+        OrderEvent.FINISH,
+        deal
+      );
 
       this.settleBookSize++;
       return order;
@@ -167,73 +255,63 @@ class OrderService {
     market,
     side,
     amount,
-    taker_fee,
-    maker_fee,
-    ...params
+    total_fee,
   }: PutMarketParams) {
-    const { money } = this.getMarketByName(market);
-    const { balance } = await db.getLastBalance(user_id, [money]);
-
-    if (side === OrderSide.BID && balance < amount) {
-      return { message: 'Balance not enough' };
-    }
-
     const order: Order = {
       id: uuidv4(),
       user_id,
       type: OrderType.LIMIT,
       side,
-      amount,
       market,
-      taker_fee,
-      maker_fee,
-      deal_money: amount - maker_fee,
-      deal_stock: amount - taker_fee,
-      deal_fee: taker_fee + maker_fee,
+      status: OrderStatus.COMPLETED,
+      amount,
+      total_fee,
+      deal_money: amount - total_fee,
+      deal_stock: amount - total_fee,
       create_time: getCurrentTimestamp(),
-      finish_time: 'infinity',
+      update_time: 'infinity',
     };
 
-    let isExecuted: any;
+    let dealOrder: Order;
     if (side === OrderSide.ASK) {
-      isExecuted = this.executeAskMarketOrder(order);
+      dealOrder = this.executeAskMarketOrder(order);
     } else {
-      isExecuted = this.executeBidMarketOrder(order);
+      dealOrder = this.executeBidMarketOrder(order);
     }
 
-    if (isExecuted) {
-      order.finish_time = getCurrentTimestamp();
+    if (dealOrder) {
+      order.update_time = getCurrentTimestamp();
+      appendOrderDeal(order, dealOrder);
       this.settleBookSize++;
-      // sendMessage('ORDER_MARKET_FINISH');
       return order;
     }
 
-    return 'Order book is empty';
+    return { message: 'Order book is empty' };
   }
 
-  async cancel({ user_id, market, order_id, ...params }: CancelParams) {
-    const { asks, bids, money }: Market = this.getMarketByName(market);
-    let order: Order;
-
+  async cancel({ user_id, market, order_id }: CancelParams) {
+    const { asks, bids }: Market = this.getMarketByName(market);
     let orderIndex: number = asks.findIndex(
       (order) => order.id === order_id && order.user_id === user_id
     );
 
-    if (orderIndex < 0) {
-      orderIndex = bids.findIndex(
-        (order) => order.id === order_id && order.user_id === user_id
-      );
-      [order] = bids.splice(orderIndex, 1);
-      await appendTradeBalance(user_id, order.deal_money, money);
+    if (orderIndex >= 0) {
+      const [order] = asks.splice(orderIndex, 1);
+      order.status = OrderStatus.CANCELED;
+      db.updateOrder(order, getCurrentTimestamp());
       return order;
     }
+    orderIndex = bids.findIndex(
+      (order) => order.id === order_id && order.user_id === user_id
+    );
 
     if (orderIndex < 0) {
       return 'Order not found';
     }
 
-    [order] = asks.splice(orderIndex, 1);
-    await appendTradeBalance(user_id, order.deal_money, money);
+    const [order] = bids.splice(orderIndex, 1);
+    order.status = OrderStatus.CANCELED;
+    db.updateOrder(order, getCurrentTimestamp());
     return order;
   }
 
@@ -269,6 +347,14 @@ class OrderService {
   }
 
   pending({ user_id, market, offset, limit }: PendingParams) {
+    if (!market) {
+      const { total, records } = getAllPending(this.marketList, user_id);
+      return {
+        total,
+        records: records.slice(offset, limit),
+      };
+    }
+
     const { asks, bids }: Market = this.getMarketByName(market);
     const askOrders = asks.filter((order) => order.user_id == user_id);
     const bidOrders = bids.filter((order) => order.user_id == user_id);
@@ -276,7 +362,7 @@ class OrderService {
 
     return {
       total: userOrders.length,
-      records: userOrders.slice(offset, limit),
+      records: userOrders.reverse().slice(offset, limit),
     };
   }
 

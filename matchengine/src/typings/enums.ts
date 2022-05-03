@@ -1,6 +1,6 @@
 export enum OrderSide {
-  ASK = 'ask',
-  BID = 'bid',
+  ASK = 'sell',
+  BID = 'buy',
 }
 
 export enum BusinessEnum {
@@ -14,14 +14,12 @@ export enum OrderType {
   MARKET = 'market',
 }
 
-// export enum OrderStatus {
-//   NEW = 'new',
-//   SUSPENDED = 'suspended',
-//   CANCELED = 'canceled',
-//   EXPIRED = 'expired',
-//   PARTIALLY_FILLED = 'partiallyFilled',
-//   FILLED = 'filled',
-// }
+export enum OrderStatus {
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  PARTIALLY = 'partially',
+  CANCELED = 'canceled',
+}
 
 export enum BalanceType {
   FREEZE = 'freeze',
@@ -31,6 +29,7 @@ export enum BalanceType {
 export enum OrderEvent {
   PUT = 'ORDER_EVENT_PUT',
   UPDATE = 'ORDER_EVENT_UPDATE',
+  PARTIALLY_FINISH = 'ORDER_PARTIALLY_FINISH',
   FINISH = 'ORDER_EVENT_FINISH',
 }
 
