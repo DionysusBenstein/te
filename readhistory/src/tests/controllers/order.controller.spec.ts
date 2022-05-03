@@ -20,9 +20,9 @@ describe("OrderController", () => {
   describe("OrderController.deals", () => {
     it("should return `limit`, `offset` and `records`", async () => {
       const params: OrderDealsParams = {
-        limit: 1,
-        order_id: 1,
+        order_id: '63a1a1d3-c117-4cf8-9a3c-17d375b2bd25',
         offset: 1,
+        limit: 1,
       };
 
       expect(await orderController.deals(params)).toStrictEqual({

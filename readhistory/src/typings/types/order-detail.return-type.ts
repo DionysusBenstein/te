@@ -1,7 +1,7 @@
 export type OrderDetail = {
   id: number;
   create_time: string;
-  finish_time: string;
+  update_time: string;
   user_id: number;
   market: string;
   source: string;

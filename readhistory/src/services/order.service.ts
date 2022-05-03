@@ -4,6 +4,7 @@ import { pool } from "../config/database.config";
 import { FinishedDetailParams } from "../dto/finished-detail-params.dto";
 import { OrderDealsParams } from "../dto/order-deals-params.dto";
 import { OrderFinishedParams } from "../dto/order-finished-params.dto";
+import { OrderHistoryParams } from '../dto/order-history-params.dto';
 import { DealHistory } from "../typings/types/deal-history.return-type";
 import { OrderDetail } from "../typings/types/order-detail.return-type";
 import { OrderHistory } from "../typings/types/order-history.return-type";
@@ -64,7 +65,7 @@ export class OrderService {
     const queryString = `
         SELECT * FROM order_detail WHERE ${fieldMatch(
           params
-        )} AND finish_time <= '${new Date(Date.now()).toISOString()}';
+        )} AND update_time <= '${new Date(Date.now()).toISOString()}';
     `;
 
     const { rows }: QueryResult<OrderDetail> = await this.pool.query(
@@ -72,6 +73,35 @@ export class OrderService {
     );
 
     return rows;
+  }
+
+  async getOrderHistory({ offset, limit, ...params }: OrderHistoryParams) {
+    try {
+      const queryString = `
+        SELECT
+          (SELECT COUNT(*) 
+           FROM order_history
+           WHERE ${fieldMatch(params)}
+          ) as count, 
+          (SELECT json_agg(t.*) FROM (
+              SELECT * FROM order_history
+              WHERE ${fieldMatch(params)}
+              ORDER BY create_time DESC
+              OFFSET ${offset}
+              LIMIT ${limit}
+          ) AS t) AS rows 
+      `;
+
+      const { rows } = await pool.query(queryString);
+
+      return {
+        records: rows[0].rows,
+        total: parseInt(rows[0].count)
+      };
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
   }
 }
 

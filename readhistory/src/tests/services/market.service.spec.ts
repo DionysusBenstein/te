@@ -10,10 +10,10 @@ describe("MarketService", () => {
         query: () => ({ rows: userDealsMock }),
       });
       const params: MarketUserDealsParams = {
+        user_id: '79A79A10-A7F7-4649-A01C-5F84D802450F',
+        market: "some market",
         limit: 1,
         offset: 1,
-        user_id: 1,
-        market: "some market",
       };
 
       expect(await marketService.getUserDeals(params)).toStrictEqual(

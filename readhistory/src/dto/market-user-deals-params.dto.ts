@@ -1,24 +1,31 @@
-import { Expose } from "class-transformer";
-import { IsInt, Min, IsPositive, IsString, IsNotEmpty } from "class-validator";
-
+import { Expose } from 'class-transformer';
+import {
+    IsInt,
+    Min,
+    IsPositive,
+    IsString,
+    IsNotEmpty,
+    IsUUID
+} from 'class-validator';
 export class MarketUserDealsParams {
-  @Expose()
-  @IsInt()
-  @IsPositive()
-  user_id: number;
+    @Expose()
+    @IsString()
+    @IsNotEmpty()
+    @IsUUID('4')
+    user_id: string;
 
-  @Expose()
-  @IsString()
-  @IsNotEmpty()
-  market: string;
+    @Expose()
+    @IsString()
+    @IsNotEmpty()
+    market: string;
 
-  @Expose()
-  @IsInt()
-  @Min(0)
-  offset: number;
+    @Expose()
+    @IsInt()
+    @Min(0)
+    offset: number;
 
-  @Expose()
-  @IsInt()
-  @IsPositive()
-  limit: number;
+    @Expose()
+    @IsInt()
+    @IsPositive()
+    limit: number;
 }

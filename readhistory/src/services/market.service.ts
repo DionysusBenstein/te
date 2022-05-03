@@ -11,18 +11,29 @@ export class MarketService {
     limit,
     offset,
     ...params
-  }: MarketUserDealsParams): Promise<UserDealHistory[]> {
+  }: MarketUserDealsParams) {
     const queryString = `
-    SELECT * FROM user_deal_history WHERE ${fieldMatch(
-      params
-    )} LIMIT ${limit} OFFSET ${offset};
+      SELECT
+        (SELECT COUNT(*) 
+         FROM deal_history
+         WHERE ${fieldMatch(params)}
+        ) as count, 
+        (SELECT json_agg(t.*) FROM (
+            SELECT * FROM deal_history
+            WHERE ${fieldMatch(params)}
+            OFFSET ${offset}
+            LIMIT ${limit}
+        ) AS t) AS rows 
     `;
 
-    const { rows }: QueryResult<UserDealHistory> = await this.pool.query(
+    const { rows } = await this.pool.query(
       queryString
     );
-
-    return rows;
+      
+    return {
+      records: rows[0].rows,
+      total: parseInt(rows[0].count)
+    };
   }
 }
 

@@ -3,19 +3,19 @@ CREATE TABLE order_history (
     "user_id"        uuid NOT NULL,
 
     "type"           VARCHAR(6) NOT NULL,
-    "side"           VARCHAR(3) NOT NULL,
+    "side"           VARCHAR(4) NOT NULL,
+    "market"         VARCHAR(7) NOT NULL,
+    "status"         VARCHAR(9) NOT NULL,
     "price"          DECIMAL(30,8) NOT NULL,
     "amount"         DECIMAL(30,8) NOT NULL,
-    "market"         VARCHAR(7) NOT NULL,
+    "total"          DECIMAL(30,8) NOT NULL,
 
-    "taker_fee"       DECIMAL(30,4) NOT NULL,
-    "maker_fee"       DECIMAL(30,4) NOT NULL,
+    "total_fee"       DECIMAL(30,4) NOT NULL,
     "deal_money"      DECIMAL(30,16) NOT NULL,
     "deal_stock"      DECIMAL(30,8) NOT NULL,
-    "deal_fee"        DECIMAL(30,16) NOT NULL,
 
     "create_time"     TIMESTAMP NOT NULL,
-    "finish_time"     TIMESTAMP NOT NULL
+    "update_time"     TIMESTAMP NOT NULL
 );
 
 CREATE TABLE deal_history (
@@ -23,9 +23,11 @@ CREATE TABLE deal_history (
     "user_id"        uuid NOT NULL,
     "order_id"       uuid NOT NULL,
     "deal_order_id"  uuid NOT NULL,
+    "market"         VARCHAR(7) NOT NULL,
     "role"           VARCHAR(5) NOT NULL,
     "price"          DECIMAL(30,8) NOT NULL,
     "amount"         DECIMAL(30,8) NOT NULL,
+    "total"          DECIMAL(30,8) NOT NULL,
     "deal"           DECIMAL(30,16) NOT NULL,
     "fee"            DECIMAL(30,16) NOT NULL,
     "deal_fee"       DECIMAL(30,16) NOT NULL,

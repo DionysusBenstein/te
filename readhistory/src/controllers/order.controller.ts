@@ -1,6 +1,7 @@
 import { FinishedDetailParams } from "../dto/finished-detail-params.dto";
 import { OrderDealsParams } from "../dto/order-deals-params.dto";
 import { OrderFinishedParams } from "../dto/order-finished-params.dto";
+import { OrderHistoryParams } from '../dto/order-history-params.dto';
 import orderService, { OrderService } from "../services/order.service";
 import { validateAndConvert } from "../utils/validation.util";
 
@@ -56,6 +57,29 @@ export class OrderController {
 
     return {
       records: await this.orderService.getFinishedDetail(data),
+    };
+  }
+  
+  async history(params: OrderHistoryParams) {
+    const { data, errors } = await validateAndConvert(
+      OrderHistoryParams,
+      params
+    );
+
+    if (errors) {
+      return {
+        errors,
+        message: 'Invalid params!',
+      };
+    }
+
+    const { records, total } = await this.orderService.getOrderHistory(data);
+
+    return {
+      offset: params.offset,
+      limit: params.limit,
+      total,
+      records
     };
   }
 }

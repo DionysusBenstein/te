@@ -1,19 +1,27 @@
-import { Expose } from "class-transformer";
-import { IsInt, Min, IsPositive } from "class-validator";
+import { Expose } from 'class-transformer';
+import {
+    IsInt,
+    Min,
+    IsPositive,
+    IsString,
+    IsNotEmpty,
+    IsUUID,
+} from 'class-validator';
 
 export class OrderDealsParams {
-  @Expose()
-  @IsInt()
-  @IsPositive()
-  order_id: number;
+    @Expose()
+    @IsString()
+    @IsNotEmpty()
+    @IsUUID('4')
+    order_id: string;
 
-  @Expose()
-  @IsInt()
-  @Min(0)
-  offset: number;
+    @Expose()
+    @IsInt()
+    @Min(0)
+    offset: number;
 
-  @Expose()
-  @IsInt()
-  @IsPositive()
-  limit: number;
+    @Expose()
+    @IsInt()
+    @IsPositive()
+    limit: number;
 }

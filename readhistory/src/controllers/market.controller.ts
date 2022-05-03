@@ -17,10 +17,13 @@ export class MarketController {
       };
     }
 
+    const { records, total } = await this.marketService.getUserDeals(data);    
+
     return {
       offset: params.offset,
       limit: params.limit,
-      records: await this.marketService.getUserDeals(data),
+      total,
+      records
     };
   }
 }

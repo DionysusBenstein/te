@@ -12,7 +12,7 @@
 --     "id"            SERIAL NOT NULL PRIMARY KEY,
 --     "side"          SMALLINT NOT NULL,
 --     "create_time"   TIMESTAMP NOT NULL,
---     "finish_time"   TIMESTAMP NOT NULL,
+--     "update_time"   TIMESTAMP NOT NULL,
 --     "user_id"       INT NOT NULL,
 --     "market"        VARCHAR(7) NOT NULL,
 --     "price"         DECIMAL(30,8) NOT NULL,
