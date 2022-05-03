@@ -1,14 +1,14 @@
 import kafkaConsumer from '../kafka/kafka.consumer';
 import { KafkaTopic, ResponseMessage } from '../types/enums';
 
-export async function subscribeHelper(params: any, ws: any) {
+export async function subscribeHelper(params: any, ws: any, topics: KafkaTopic[]) {
   const self = this;
 
   const consumer = await kafkaConsumer.subscribe(
-    // TODO: subscribe to a another topics dynamically
-    KafkaTopic.ORDERS,
+    topics,
     (result) => {
-      console.log(`Message ${result.message.value}`);
+      const { key } = result.message;
+      console.log(`Message ${key}`);
       ws.send(JSON.stringify(self.query(params)));
     }
   );

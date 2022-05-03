@@ -14,7 +14,7 @@ class KafkaConsumer {
     });
   }
 
-  async subscribe(topic: string, eachMessage): Promise<Consumer> {
+  async subscribe(topics: string[], eachMessage): Promise<Consumer> {
     try {
       const groupId: string = uuidv4();
       const consumer: Consumer = this.kafka.consumer({ groupId });
@@ -23,9 +23,11 @@ class KafkaConsumer {
       await consumer.connect();
       console.log(`✅ Connected to Kafka consumer (id: ${groupId})`);
 
-      await consumer.subscribe({ topic });
-      await consumer.run({ eachMessage });
+      for (const topic of topics) {
+        await consumer.subscribe({ topic });
+      }
 
+      await consumer.run({ eachMessage });
       return consumer;
     } catch (err) {
       console.error(`ERROR::CONSUMER:: ${err}`);
