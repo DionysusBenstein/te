@@ -2,6 +2,7 @@ import { MarketStatusTodayParams } from "./../dto/market-status-today-params.dto
 import { MarketStatusParams } from "./../dto/market-status-params.dto";
 import { MarketDealsParams } from "./../dto/market-deals-params.dto";
 import { MarketLastParams } from "../dto/market-last-params.dto";
+import { KlineParams } from "../dto/kline-params.dto";
 import { validateAndConvert } from "../utils/validation.util";
 import marketService, { MarketService } from "../services/market.service";
 
@@ -66,6 +67,22 @@ export class MarketController {
     }
 
     return await this.marketService.getStatusToday(data);
+  }
+
+  async kline(params: KlineParams) {
+    const { data, errors } = await validateAndConvert(
+      KlineParams,
+      params
+    );
+
+    if (errors) {
+      return {
+        errors,
+        message: "Invalid params!",
+      };
+    }
+
+    return await this.marketService.getKline(data);
   }
 }
 

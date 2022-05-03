@@ -15,12 +15,7 @@ export const methods = {
     },
 
     async kline(args, callback) {
-      const response = {
-        message: "market.kline is working!",
-        args,
-      };
-
-      callback(null, response);
+      callback(null, await marketController.kline(args));
     },
 
     async status(args: MarketStatusParams, callback) {
