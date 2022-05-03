@@ -20,42 +20,32 @@ services:
     depends_on:
       - zookeeper
 
-  # kafka_ui:
-  #   image: provectuslabs/kafka-ui:latest
-  #   container_name: kafka_ui
-  #   depends_on:
-  #     - kafka
-  #   ports:
-  #     - 8080:8080
-  #   environment:
-  #     KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-  #     KAFKA_CLUSTERS_0_NAME: local
-  #     KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-
   redis:
     image: redis
     container_name: redis
     hostname: redis
     restart: unless-stopped
     volumes:
-      - ./redis:/data
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis.conf
     ports:
       - 6379:6379
+    command: redis-server /usr/local/etc/redis.conf
       
   postgres:
     container_name: postgres
-    hostname: zookeeper
+    hostname: postgres
     image: postgres
     ports:
       - 5432:5432
     volumes:
-      - ./postgres:/docker-entrypoint-initdb.d
-      - ./postgres:/var/lib/postgresql/data
+      - ./postgres/scripts:/docker-entrypoint-initdb.d
+      - ./postgres/pgdata:/var/lib/postgresql/pgdata
     environment:
       POSTGRES_DB: trade_history
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: b7Mg4UmK
-      PGDATA: "/var/postgresql/data/pgdata"
+      PGDATA: /var/lib/postgresql/pgdata
 
   marketprice:
     container_name: marketprice
