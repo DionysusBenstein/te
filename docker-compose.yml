@@ -31,7 +31,7 @@ services:
     ports:
       - 6379:6379
     command: redis-server /usr/local/etc/redis.conf
-      
+
   postgres:
     container_name: postgres
     hostname: postgres
@@ -48,7 +48,7 @@ services:
       PGDATA: /var/lib/postgresql/pgdata
 
   marketprice:
-    container_name: marketprice
+    container_name: marprice
     build: ./marketprice
     environment:
       - NODE_ENV=production
@@ -63,7 +63,6 @@ services:
       - zookeeper
       - kafka
     restart: always
-    command: npm start
 
   matchengine:
     container_name: matchengine
@@ -80,7 +79,6 @@ services:
     depends_on:
       - kafka
     restart: always
-    command: npm start
 
   readhistory:
     container_name: readhistory
@@ -95,8 +93,6 @@ services:
     ports:
       - 3002:3002
     restart: always
-    command: npm start
-
   router:
     container_name: router
     build: ./router
@@ -110,7 +106,6 @@ services:
     ports:
       - 3003:3003
     restart: always
-    command: npm start
 
   websocket:
     container_name: websocket
@@ -125,8 +120,6 @@ services:
     ports:
       - 3031:3031
     restart: always
-    command: npm start
-
 volumes:
   zookeeper_data:
     driver: local
