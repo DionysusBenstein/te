@@ -19,6 +19,7 @@
 		- [Setup](#setup)
 		- [Start](#start)
 		- [Start in dev mode](#start-in-dev-mode)
+		- [Start on offline server](#start-offline)
 		- [Stop the system](#stop-the-system)
 - [Terminology](#terminology)
 - [References](#references)
@@ -258,6 +259,39 @@ To start services in development mode with nodemon just run
 ```bash
 docker-compose -f docker-compose-dev.yml up -d
 ```
+
+<a name="start-offline"></a>
+### Start on offline server
+To start services on offline server you should download [docker engine packages](https://docs.docker.com/engine/install/ubuntu/#install-from-a-package), move them to the target server, and install them manually. Then you need to install [docker compose as standalone binary](https://docs.docker.com/compose/install/#install-compose-as-standalone-binary-on-linux-systems) also manually.
+
+After Docker is installed, you need to build images of the current version of the trading engine on a server with Internet access.
+
+```bash
+docker-compose build
+```
+
+Next, you need to export the built docker images into single tar file:
+
+```bash
+docker save $(docker images --format '{{.Repository}}:{{.Tag}}') -o te_images.tar
+```
+
+After that, you need to move this tar file to the target server:
+
+```bash
+scp ./te_images.tar <username>@<host>:~/te_images.tar
+```
+And load images from the tar archive. It restores both images and tags:
+
+```bash
+docker load -i te_images.tar
+```
+
+Then it's enough just to run the containers using a special `docker-compose-offline.yml` file:
+```bash
+docker-compose -f docker-compose-offline.yml up -d
+```
+
 <a name="stop"></a>
 ### Stop the system
 Stopping all the running containers is also simple with a single command:
