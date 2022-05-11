@@ -9,7 +9,8 @@ import {
   Min,
   IsIn,
 } from 'class-validator';
-import { getMarketList } from '../utils/config.util';
+import { ContainsStockAndMoney } from '../validators/contains-stock-and-money.validator';
+import { getMarketList, getAssetList } from '../utils/config.util';
 import { OrderSide } from '../typings/enums';
 
 export class PutMarketParams {
@@ -20,6 +21,17 @@ export class PutMarketParams {
   user_id: string;
 
   @Expose()
+  @IsString()
+  @IsNotEmpty()
+  @IsUUID()
+  exchange_id: string;
+
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  exchange_name: string;
+  
+  @Expose()
   @IsEnum(OrderSide)
   side: OrderSide;
  
@@ -27,14 +39,27 @@ export class PutMarketParams {
   @IsString()
   @IsNotEmpty()
   @IsIn(getMarketList())
+  @ContainsStockAndMoney('stock', 'money')
   market: string;
 
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(getAssetList())
+  stock: string;
+
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(getAssetList())
+  money: string;
 
   @Expose()
   @IsNumber()
   @IsPositive()
   amount: number;
 
+  @Expose()
   @IsNumber()
   @Min(0)
   total_fee: number;
