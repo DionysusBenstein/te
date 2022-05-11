@@ -12,10 +12,6 @@ class BalanceService {
     this.idStart = 1;
   }
 
-  unfreezeBalance() {}
-
-  freezeBalance() {}
-
   async query({ user_id, assets, ...params }: BalanceQueryParams) {
     const result: any = [];
 
@@ -42,7 +38,11 @@ class BalanceService {
     ...params
   }: UpdateBalanceParams) {
     const balanceArr = await db.getBalanceHistory(user_id, [asset]);
-    const { balance: lastBalance } = balanceArr.pop();
+
+    let lastBalance = 0
+    if (balanceArr.length) {
+      lastBalance = balanceArr.pop().balance;
+    }
 
     if (change < 0 && lastBalance < Math.abs(change)) {
       return { message: 'Balance is not enough' };
@@ -62,7 +62,7 @@ class BalanceService {
 
     await db.appendBalanceHistory(newBalance);
 
-    return { newBalance: newBalance };
+    return { new_balance: newBalance };
   }
 }
 
