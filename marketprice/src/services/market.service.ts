@@ -20,7 +20,7 @@ export class MarketService {
     const [lastDeal] = await this.client.lRange(`${market}:deals`, 0, 0);
     if (!lastDeal) return null;
     const { price } = JSON.parse(lastDeal);
-    return { price };
+    return { market, price };
   }
 
   async getDeals({ offset, limit, market }: MarketDealsParams) {
@@ -75,7 +75,7 @@ export class MarketService {
     return status;
   }
 
-  async getKline({ market, start, end, interval }: KlineParams) {
+  async getKline({ market, start, end, interval, offset, limit }: KlineParams) {
     const { timeframes } = config;
     const allKlines = await this.client.hGetAll(`k:${market}:${interval}`);
     if (!allKlines) return null;
@@ -85,7 +85,7 @@ export class MarketService {
       for (let time of Object.keys(allKlines)) {
         klines.push(JSON.parse(allKlines[time]));
       }
-      return klines;
+      return klines.slice(offset, limit);
     }
 
     for (let time of Object.keys(allKlines)) {
@@ -99,7 +99,7 @@ export class MarketService {
       }
     }
 
-    return klines;
+    return klines.slice(offset, limit);
   }
 }
 

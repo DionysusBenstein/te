@@ -5,7 +5,8 @@ import {
   IsNotEmpty,
   IsPositive,
   IsString,
-  IsOptional
+  IsOptional,
+  Max
 } from 'class-validator';
 import config from '../config/marketprice.config';
 
@@ -32,4 +33,16 @@ export class KlineParams {
   @IsNotEmpty()
   @IsIn(Object.keys(config.timeframes))
   interval: number;
+
+  @Expose()
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  @Max(10000)
+  limit?: number;
+  
+  @Expose()
+  @IsInt()
+  @IsOptional()
+  offset?: number;
 }
