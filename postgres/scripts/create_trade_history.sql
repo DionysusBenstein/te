@@ -1,5 +1,7 @@
 CREATE TABLE order_history (
     "id"             uuid NOT NULL PRIMARY KEY,
+    "exchange_id"    uuid NOT NULL,
+    "exchange_name"  VARCHAR(40) NOT NULL,
     "user_id"        uuid NOT NULL,
 
     "type"           VARCHAR(6) NOT NULL,
@@ -20,7 +22,10 @@ CREATE TABLE order_history (
 
 CREATE TABLE deal_history (
     "id"             uuid NOT NULL PRIMARY KEY,
+    "exchange_id"    uuid NOT NULL,
+    "exchange_name"  VARCHAR(40) NOT NULL,
     "user_id"        uuid NOT NULL,
+    "deal_user_id"   uuid NOT NULL,
     "order_id"       uuid NOT NULL,
     "deal_order_id"  uuid NOT NULL,
     "market"         VARCHAR(7) NOT NULL,

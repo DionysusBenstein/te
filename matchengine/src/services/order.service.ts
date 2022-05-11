@@ -91,7 +91,8 @@ class OrderService {
       for (let i = bids.length - 1; i >= 0; i--) {
         let bidOrder = bids[i];
 
-        if (bidOrder.price < order.price) {
+        // if (bidOrder.price < order.price) {
+        if (bidOrder.price != order.price) {
           break;
         }
 
@@ -133,7 +134,8 @@ class OrderService {
       for (let i = asks.length - 1; i >= 0; i--) {
         let askOrder = asks[i];
 
-        if (askOrder.price > order.price) {
+        // if (askOrder.price > order.price) {
+        if (askOrder.price != order.price) {
           break;
         }
 
@@ -174,8 +176,7 @@ class OrderService {
       return;
     }
 
-    bids.sort((a, b) => b.price - a.price);
-    const [dealOrder] = bids.splice(0, 1);
+    const dealOrder = bids.pop();
     return dealOrder;
   }
 
@@ -186,14 +187,17 @@ class OrderService {
       return;
     }
 
-    asks.sort((a, b) => a.price - b.price);
-    const [dealOrder] = asks.splice(0, 1);
+    const dealOrder = asks.pop();
     return dealOrder;
   }
 
   async putLimit({
+    exchange_id,
+    exchange_name,
     user_id,
     market,
+    stock,
+    money,
     side,
     price,
     amount,
@@ -201,10 +205,14 @@ class OrderService {
   }: PutLimitParams): Promise<Order> {
     const order: Order = {
       id: uuidv4(),
+      exchange_id,
+      exchange_name,
       user_id,
       type: OrderType.LIMIT,
       side,
       market,
+      stock,
+      money,
       price,
       amount,
       total: amount * price,
@@ -252,17 +260,25 @@ class OrderService {
 
   async putMarket({
     user_id,
+    exchange_id,
+    exchange_name,
     market,
+    stock,
+    money,
     side,
     amount,
     total_fee,
   }: PutMarketParams) {
     const order: Order = {
       id: uuidv4(),
+      exchange_id,
+      exchange_name,
       user_id,
       type: OrderType.LIMIT,
       side,
       market,
+      stock,
+      money,
       status: OrderStatus.COMPLETED,
       amount,
       total_fee,
@@ -281,7 +297,19 @@ class OrderService {
 
     if (dealOrder) {
       order.update_time = getCurrentTimestamp();
-      appendOrderDeal(order, dealOrder);
+      order.price = dealOrder.price;
+      const deal: Deal = await appendOrderDeal(order, dealOrder);
+
+      await kafkaProducer.pushMessage(
+        KafkaTopic.DEALS,
+        OrderEvent.FINISH,
+        deal
+      );
+
+      order.status = OrderStatus.COMPLETED;
+      dealOrder.status = OrderStatus.COMPLETED;
+      await updateOrderHistory(order, dealOrder);
+
       this.settleBookSize++;
       return order;
     }

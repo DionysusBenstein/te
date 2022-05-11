@@ -36,10 +36,16 @@ export async function appendOrderDeal(
 ): Promise<Deal> {
   const firstDeal: Deal = {
     id: uuidv4(),
+    exchange_id: order.exchange_id,
+    exchange_name: order.exchange_name,
     user_id: order.user_id,
+    deal_user_id: dealOrder.user_id,
     order_id: order.id,
     deal_order_id: dealOrder.id,
+    side: order.side,
     market: order.market,
+    stock: order.stock,
+    money: order.money,
     role: MarketRole.TAKER,
     price: order.price,
     amount: order.amount,
@@ -52,10 +58,16 @@ export async function appendOrderDeal(
 
   const secondDeal: Deal = {
     id: uuidv4(),
+    exchange_id: dealOrder.exchange_id,
+    exchange_name: dealOrder.exchange_name,
     user_id: dealOrder.user_id,
+    deal_user_id: order.user_id,
     order_id: dealOrder.id,
     deal_order_id: order.id,
+    side: dealOrder.side,
     market: dealOrder.market,
+    stock: dealOrder.stock,
+    money: dealOrder.money,
     role: MarketRole.TAKER,
     price: dealOrder.price,
     amount: dealOrder.amount,

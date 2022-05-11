@@ -2,10 +2,14 @@ import { OrderSide, OrderType, BusinessEnum, MarketRole } from './enums';
 
 export type Order = {
   id: string;
+  exchange_id: string;
+  exchange_name: string;
   user_id: string;
   type: OrderType;
   side: OrderSide;
   market: string;
+  stock: string;
+  money: string;
   status: string;
   price?: number;
   amount: number;
@@ -19,10 +23,16 @@ export type Order = {
 
 export type Deal = {
   id: string;
+  exchange_id: string;
+  exchange_name: string;
   user_id: string;
+  deal_user_id: string;
   order_id: string;
   deal_order_id: string;
+  side: string;
   market: string;
+  stock: string;
+  money: string;
   role: MarketRole;
   price: number;
   amount: number;

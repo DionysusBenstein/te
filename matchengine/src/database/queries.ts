@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 class Queries {
   async appendOrderHistory({
     id,
+    exchange_id,
+    exchange_name,
     user_id,
     type,
     side,
@@ -24,6 +26,8 @@ class Queries {
       const queryString: string = `
         INSERT INTO "order_history" (
           "id",
+          "exchange_id",
+          "exchange_name",
           "user_id",
           "type",
           "side",
@@ -41,6 +45,8 @@ class Queries {
         VALUES            
           (
             '${id}',
+            '${exchange_id}',
+            '${exchange_name}',
             '${user_id}',
             '${type}',
             '${side}',
@@ -67,7 +73,10 @@ class Queries {
 
   async appendDealHistory({
     id,
+    exchange_id,
+    exchange_name,
     user_id,
+    deal_user_id,
     order_id,
     deal_order_id,
     market,
@@ -84,7 +93,10 @@ class Queries {
       const queryString: string = `
         INSERT INTO "deal_history" (
           "id",
+          "exchange_id",
+          "exchange_name",
           "user_id",
+          "deal_user_id",
           "order_id",
           "deal_order_id",
           "market",
@@ -100,7 +112,10 @@ class Queries {
         VALUES            
           (
             '${id}',
+            '${exchange_id}',
+            '${exchange_name}',
             '${user_id}',
+            '${deal_user_id}',
             '${order_id}',
             '${deal_order_id}',
             '${market}',
