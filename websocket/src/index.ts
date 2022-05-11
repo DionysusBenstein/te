@@ -17,5 +17,5 @@ async function handleMessage(rawData) {
 
 wss.on('connection', (ws) => {
   ws.on('message', handleMessage);
-  ws.send('Connected successfully!');
+  ws.send(JSON.stringify({ message: 'Connected successfully!' }));
 });

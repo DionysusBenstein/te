@@ -12,10 +12,9 @@ class PriceController implements IWsRpcController {
   query(params: any) {
     return deasyncRequestHelper(Method.MARKET_LAST, params, client);
   }
-  
+
   async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, params, ws,
-      [KafkaTopic.DEALS, KafkaTopic.ORDERS]);
+    return await subscribeHelper.call(this, Method.MARKET_LAST, params, ws, [KafkaTopic.DEALS]);
   }
 
   update(params: any, ws: any, wss: any): string {

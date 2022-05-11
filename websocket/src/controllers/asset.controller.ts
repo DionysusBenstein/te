@@ -18,7 +18,7 @@ class AssetController implements IWsRpcController {
   }
 
   async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, params, ws);
+    return await subscribeHelper.call(this, Method.BALANCE_QUERY, params, ws);
   }
 
   update(params: any, ws: any, wss: any): string {

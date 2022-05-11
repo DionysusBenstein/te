@@ -12,9 +12,15 @@ class TodayController implements IWsRpcController {
   query(params: any) {
     return deasyncRequestHelper(Method.MARKET_STATUS_TODAY, params, client);
   }
-  
+
   async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, params, ws, [KafkaTopic.DEALS]);
+    return await subscribeHelper.call(
+      this,
+      Method.MARKET_STATUS_TODAY,
+      params,
+      ws,
+      [KafkaTopic.DEALS]
+    );
   }
 
   update(params: any, ws: any, wss: any): string {

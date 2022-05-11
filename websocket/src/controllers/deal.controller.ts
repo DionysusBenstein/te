@@ -14,7 +14,9 @@ class DealController implements IWsRpcController {
   }
 
   async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, params, ws, [KafkaTopic.DEALS]);
+    return await subscribeHelper.call(this, Method.MARKET_DEALS, params, ws, [
+      KafkaTopic.DEALS,
+    ]);
   }
 
   update(params: any, ws: any, wss: any): string {

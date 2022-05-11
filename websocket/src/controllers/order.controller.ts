@@ -18,7 +18,9 @@ class OrderController implements IWsRpcController {
   }
 
   async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, params, ws, [KafkaTopic.ORDERS]);
+    return await subscribeHelper.call(this, Method.ORDER_FINISHED, params, ws, [
+      KafkaTopic.ORDERS,
+    ]);
   }
 
   update(params: any, ws: any, wss: any): string {

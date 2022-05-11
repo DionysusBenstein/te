@@ -12,9 +12,11 @@ class StateController implements IWsRpcController {
   query(params: any) {
     return deasyncRequestHelper(Method.MARKET_STATUS, params, client);
   }
-  
+
   async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, params, ws, [KafkaTopic.DEALS]);
+    return await subscribeHelper.call(this, Method.MARKET_STATUS, params, ws, [
+      KafkaTopic.DEALS,
+    ]);
   }
 
   update(params: any, ws: any, wss: any): string {
