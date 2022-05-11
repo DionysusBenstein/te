@@ -1,5 +1,6 @@
+const { KAFKA_HOST, KAFKA_PORT } = process.env;
+
 export default {
   clientId: 'websocket',
-  brokers: ['kafka:9092'],
-  topic: 'order',
+  brokers: [`${KAFKA_HOST}:${KAFKA_PORT}`],
 };
