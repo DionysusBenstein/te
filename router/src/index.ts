@@ -13,9 +13,9 @@ app.use(express.json());
 app.use(cors())
 
 const redirectsCollapsed = collapse(redirects);
-const server = new jayson.Server(redirectsCollapsed);
+const rpcServer = new jayson.Server(redirectsCollapsed);
 
-app.post("/", server.middleware());
+app.post("/", rpcServer.middleware());
 
 app.get("/", (req, res) => {
   res.send("router healthcheck");
