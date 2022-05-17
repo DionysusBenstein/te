@@ -11,7 +11,7 @@ export async function marketUpdate(dealInfo: any) {
   const { timeframes } = config;
   const deal: Deal = {
     id: uuidv4(),
-    type: dealInfo.role,
+    type: dealInfo.side,
     price: dealInfo.price,
     amount: dealInfo.amount,
     total: dealInfo.total,
@@ -48,7 +48,7 @@ export async function marketUpdate(dealInfo: any) {
 }
 
 export async function onDealMessage(result) {
-  let { value: dealInfo } = result.message;  
+  let { value: dealInfo } = result.message;
   dealInfo = JSON.parse(dealInfo);
   await marketUpdate(dealInfo);
 }

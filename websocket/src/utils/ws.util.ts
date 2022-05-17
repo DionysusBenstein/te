@@ -1,4 +1,4 @@
-import { ResponseMessage } from '../types/enums';
+import { ResponseMessage } from '../typings/enums';
 
 export function broadcast(wss: any, msg: any) {
   wss.clients.forEach((client) => {

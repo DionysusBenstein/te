@@ -2,8 +2,9 @@ import { Consumer } from 'kafkajs/types';
 import { deasyncRequestHelper } from '../utils/deasync.util';
 import { subscribeHelper, unsubscribeHelper } from '../utils/kafka.util';
 import { updateHelper } from '../utils/ws.util';
-import { KafkaTopic, Method } from '../types/enums';
-import { IWsRpcController } from '../types/interfaces';
+import { KafkaTopic, Method, SocketEvent } from '../typings/enums';
+import { IWsRpcController } from '../typings/interfaces';
+import { SubOptions } from '../typings/types';
 import client from '../config/router.config';
 
 class TodayController implements IWsRpcController {
@@ -14,12 +15,17 @@ class TodayController implements IWsRpcController {
   }
 
   async subscribe(params: any, ws: any) {
+    const options: SubOptions = {
+      topics: [ KafkaTopic.DEALS ],
+      event: SocketEvent.TODAY
+    };
+
     return await subscribeHelper.call(
       this,
       Method.MARKET_STATUS_TODAY,
       params,
       ws,
-      [KafkaTopic.DEALS]
+      options
     );
   }
 

@@ -1,6 +1,6 @@
 export type Deal = {
   id: string;
-  type: number;
+  type: string;
   price: number;
   amount: number;
   total: number;

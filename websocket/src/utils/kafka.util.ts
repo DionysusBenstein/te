@@ -1,18 +1,26 @@
 import kafkaConsumer from '../kafka/kafka.consumer';
-import { KafkaTopic, ResponseMessage } from '../types/enums';
+import { ResponseMessage } from '../typings/enums';
+import { SubOptions } from '../typings/types';
 
-export async function subscribeHelper(method: string, params: any, ws: any, topics: KafkaTopic[]) {
+export async function subscribeHelper(
+  method: string,
+  params: any,
+  ws: any,
+  options: SubOptions) {
   const self = this;
+  const { topics, event } = options;
 
   const consumer = await kafkaConsumer.subscribe(
     topics,
     (result) => {
       const { key } = result.message;
-      console.log(`Message ${key}`);
-      ws.send(JSON.stringify({
-        stream: method.split('.')[0],
+      const channelString = `${event}~${params.market}`;
+
+      console.log(`Message ${channelString} :: ${key}`);
+      ws.emit(channelString, JSON.stringify({
+        stream: event,
         market: params.market,
-        records: self.query(params)
+        data: self.query(params)
       }));
     }
   );
@@ -21,7 +29,7 @@ export async function subscribeHelper(method: string, params: any, ws: any, topi
 
   return {
     message: ResponseMessage.SUCCESS_SUB,
-    stream: method.split('.')[0],
+    stream: event,
     ...params
   };
 }

@@ -2,8 +2,9 @@ import { Consumer } from 'kafkajs/types';
 import { deasyncRequestHelper } from '../utils/deasync.util';
 import { subscribeHelper, unsubscribeHelper } from '../utils/kafka.util';
 import { updateHelper } from '../utils/ws.util';
-import { KafkaTopic, Method } from '../types/enums';
-import { IWsRpcController } from '../types/interfaces';
+import { KafkaTopic, Method, SocketEvent } from '../typings/enums';
+import { IWsRpcController } from '../typings/interfaces';
+import { SubOptions } from '../typings/types';
 import client from '../config/router.config';
 
 class DepthController implements IWsRpcController {
@@ -14,10 +15,12 @@ class DepthController implements IWsRpcController {
   }
 
   async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, Method.ORDER_DEPTH, params, ws, [
-      KafkaTopic.DEALS,
-      KafkaTopic.ORDERS,
-    ]);
+    const options: SubOptions = {
+      topics: [ KafkaTopic.DEALS, KafkaTopic.ORDERS ],
+      event: SocketEvent.DEPTH
+    };
+
+    return await subscribeHelper.call(this, Method.ORDER_DEPTH, params, ws, options);
   }
 
   update(params: any, ws: any, wss: any): string {

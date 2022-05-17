@@ -7,13 +7,11 @@ import { collapse } from "./utils/rpc.util";
 
 const app = express();
 const port = process.env.PORT || 3000;
+const map = _.reduce(methods, collapse("", "."), {});
 
 app.use(express.json());
 
-const map = _.reduce(methods, collapse("", "."), {});
-
 app.post("/", new jayson.Server(map).middleware());
-
 app.get("/", (req, res) => {
   res.send("marketprice healthcheck");
 });

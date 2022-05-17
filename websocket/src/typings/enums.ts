@@ -20,6 +20,17 @@ export enum KafkaTopic {
   BALANCES = 'balances',
 }
 
+export enum SocketEvent {
+  DEPTH = 'depth',
+  MARKET = 'market',
+  PRICE = 'price',
+  STATE = 'state',
+  TODAY = 'today',
+  DEAL = 'deal',
+  ORDER = 'order',
+  ASSET = 'asset',
+}
+
 export enum ResponseMessage {
   SUCCESS_SUB = 'Channel subscribed successfully',
   SUCCESS_UNSUB = 'Channel unsubscribed successfully',

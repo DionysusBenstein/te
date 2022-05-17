@@ -1,21 +1,38 @@
-import { Server } from 'ws';
+import express from 'express';
+import { Server } from 'socket.io';
+import { createServer } from 'http';
 import { methods } from './rpc';
 
+const app = express();
+const server = createServer(app);
 const port = +process.env.WS_PORT || 3031;
-const wss = new Server({ port }, () => console.log(`Running on port ${port}`));
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  }
+});
 
-async function handleMessage(rawData) {
-  try {
-    const { method, params } = JSON.parse(rawData);
-    const [route, name] = method.split('.');
-    this.send(JSON.stringify(await methods[route][name](params, this, wss)));
+async function handleMessage(rawData: any) {
+  try {    
+    const { method, params } = rawData;
+
+    if (method && params) {
+      const [route, name] = method.split('.');
+      this.emit('message', JSON.stringify(await methods[route][name](params, this, io)));
+    }
   } catch (e) {
     this.send('Invalid method');
     console.log(e);
   }
 }
 
-wss.on('connection', (ws) => {
-  ws.on('message', handleMessage);
-  ws.send(JSON.stringify({ message: 'Connected successfully!' }));
+io.on('connection', socket => {
+  console.log(`Client with id ${socket.id} connected`);
+  socket.on('message', handleMessage);
 });
+
+app.get("/", (req, res) => {
+  res.send("websocket healthcheck");
+});
+
+server.listen(port, () => console.log(`Running on port ${port}`))
