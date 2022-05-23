@@ -327,6 +327,7 @@ class OrderService {
       const [order] = asks.splice(orderIndex, 1);
       order.status = OrderStatus.CANCELED;
       db.updateOrder(order, getCurrentTimestamp());
+      await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL);
       return order;
     }
     orderIndex = bids.findIndex(
@@ -340,22 +341,36 @@ class OrderService {
     const [order] = bids.splice(orderIndex, 1);
     order.status = OrderStatus.CANCELED;
     db.updateOrder(order, getCurrentTimestamp());
+    await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL);
     return order;
   }
 
   book({ market, side, limit, offset }: OrderBookParams): any {
-    const marketObj: Market = this.getMarketByName(market);
+    const { asks, bids } = this.getMarketByName(market);
+
+    if (!side) {
+      return {
+        total: {
+          asks_count: asks.length, 
+          bids_count: bids.length
+        },
+        records: {
+          asks: asks.slice(offset, limit),
+          bids: bids.slice(offset, limit),
+        }
+      };
+    }
 
     if (side === OrderSide.ASK) {
       return {
-        total: marketObj.asks.length,
-        records: marketObj.asks.slice(offset, limit),
+        total: asks.length,
+        records: asks.slice(offset, limit),
       };
     }
 
     return {
-      total: marketObj.bids.length,
-      records: marketObj.bids.slice(offset, limit),
+      total: bids.length,
+      records: bids.slice(offset, limit),
     };
   }
 

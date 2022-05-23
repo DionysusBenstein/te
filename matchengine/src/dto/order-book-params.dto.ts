@@ -5,6 +5,7 @@ import {
   IsString,
   IsNotEmpty,
   IsEnum,
+  IsOptional,
   IsIn,
   Min,
 } from 'class-validator';
@@ -19,8 +20,9 @@ export class OrderBookParams {
   market: string;
 
   @Expose()
+  @IsOptional()
   @IsEnum(OrderSide)
-  side: OrderSide;
+  side?: OrderSide;
 
   @Expose()
   @IsInt()
