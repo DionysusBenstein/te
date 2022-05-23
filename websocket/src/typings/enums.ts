@@ -1,6 +1,7 @@
 export enum Method {
   // Trade API
   ORDER_DEPTH = 'order.depth',
+  ORDER_BOOK = 'order.book',
   ORDER_PENDING = 'order.pending',
   ORDER_FINISHED = 'order.finished',
   // Asset API
@@ -22,6 +23,7 @@ export enum KafkaTopic {
 
 export enum SocketEvent {
   DEPTH = 'depth',
+  BOOK = 'book',
   MARKET = 'market',
   PRICE = 'price',
   STATE = 'state',

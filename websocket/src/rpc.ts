@@ -1,4 +1,5 @@
 import depthController from './controllers/depth.controller';
+import bookController from './controllers/book.controller';
 import orderController from './controllers/order.controller';
 import assetController from './controllers/asset.controller';
 import dealController from './controllers/deal.controller';
@@ -43,6 +44,12 @@ export const methods = {
     subscribe: depthController.subscribe,
     update: depthController.update,
     unsubscribe: depthController.unsubscribe,
+  },
+  book: {
+    query: bookController.query,
+    subscribe: bookController.subscribe,
+    update: bookController.update,
+    unsubscribe: bookController.unsubscribe,
   },
   order: {
     query: orderController.query,
