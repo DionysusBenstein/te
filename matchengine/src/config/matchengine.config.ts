@@ -39,6 +39,10 @@ export default {
       name: 'USDG',
       prec: 8,
     },
+    {
+      name: 'EURG',
+      prec: 8,
+    },
   ],
 
   markets: [
@@ -107,6 +111,12 @@ export default {
       minAmount: 0.00001,
       stock: 'PLI',
       money: 'XDC',
+    },
+    {
+      name: 'EURGEUR',
+      minAmount: 0.00001,
+      stock: 'EURG',
+      money: 'EUR',
     },
   ],
 };
