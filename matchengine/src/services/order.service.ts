@@ -53,6 +53,25 @@ class OrderService {
 
   addAskOrder(order: Order) {
     const { asks }: Market = this.getMarketByName(order.market);
+    const samePriceOrder = asks.find(x => {
+      return x.price === order.price && 
+             x.exchange_id === order.exchange_id &&
+             x.exchange_name === order.exchange_name &&
+             x.user_id === order.user_id
+    });
+
+    console.log(samePriceOrder);
+    
+
+    if (samePriceOrder) {
+      samePriceOrder.amount += order.amount;
+      samePriceOrder.total += order.total;
+      samePriceOrder.total_fee += order.total_fee;
+      samePriceOrder.deal_money += order.deal_money;
+      samePriceOrder.deal_stock += order.deal_stock;
+      samePriceOrder.update_time = getCurrentTimestamp();
+      return samePriceOrder;
+    }  
 
     asks.push(order);
 
@@ -69,6 +88,25 @@ class OrderService {
 
   addBidOrder(order: Order) {
     const { bids }: Market = this.getMarketByName(order.market);
+    const samePriceOrder = bids.find(x => {
+      return x.price === order.price && 
+             x.exchange_id === order.exchange_id &&
+             x.exchange_name === order.exchange_name &&
+             x.user_id === order.user_id
+    });
+
+    console.log(samePriceOrder);
+    
+
+    if (samePriceOrder) {
+      samePriceOrder.amount += order.amount;
+      samePriceOrder.total += order.total;
+      samePriceOrder.total_fee += order.total_fee;
+      samePriceOrder.deal_money += order.deal_money;
+      samePriceOrder.deal_stock += order.deal_stock;
+      samePriceOrder.update_time = getCurrentTimestamp();
+      return samePriceOrder;
+    }    
 
     bids.push(order);
 
