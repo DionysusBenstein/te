@@ -25,6 +25,8 @@ import { PendingDetailParams } from '../dto/pending-detail-params.dto';
 import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 
+import redisClient from '../config/database.config';
+
 class OrderService {
   marketList: Market[] = [];
   // NOTE: this is property for testing
@@ -39,8 +41,8 @@ class OrderService {
         name,
         stock,
         money,
-        asks: [],
-        bids: [],
+        asks: redisClient.lRange(`${name}:asks`, -1, 0),
+        bids: redisClient.lRange(`${name}:bids`, -1, 0),
       };
 
       this.marketList.push(market);
