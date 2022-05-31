@@ -37,12 +37,23 @@ class OrderService {
       const { name, stock, money } = marketConf;
       this.settleBookSize = 0;
 
+      const asks = [];
+      const bids = [];
+
+      for (const id of redisClient.lRange(`${name}:asks`, -1, 0)) {
+        asks.push(redisClient.get(id));
+      }
+
+      for (const id of redisClient.lRange(`${name}:bids`, -1, 0)) {
+        bids.push(redisClient.get(id));
+      }
+
       const market: Market = {
         name,
         stock,
         money,
-        asks: redisClient.lRange(`${name}:asks`, -1, 0),
-        bids: redisClient.lRange(`${name}:bids`, -1, 0),
+        asks,
+        bids,
       };
 
       this.marketList.push(market);
