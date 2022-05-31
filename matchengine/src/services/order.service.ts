@@ -41,11 +41,11 @@ class OrderService {
       const bids = [];
 
       for (const id of redisClient.lRange(`${name}:asks`, -1, 0)) {
-        asks.push(redisClient.get(id));
+        asks.push(redisClient.get(`${name}:asks:${id}`));
       }
 
       for (const id of redisClient.lRange(`${name}:bids`, -1, 0)) {
-        bids.push(redisClient.get(id));
+        asks.push(redisClient.get(`${name}:bids:${id}`));
       }
 
       const market: Market = {
