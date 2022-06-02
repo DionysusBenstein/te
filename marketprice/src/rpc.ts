@@ -1,8 +1,8 @@
-import { MarketStatusTodayParams } from "./dto/market-status-today-params.dto";
-import { MarketLastParams } from "./dto/market-last-params.dto";
-import { MarketDealsParams } from "./dto/market-deals-params.dto";
-import { MarketStatusParams } from "./dto/market-status-params.dto";
-import marketController from "./controllers/market.controller";
+import { MarketStatusTodayParams } from './dto/market-status-today-params.dto';
+import { MarketLastParams } from './dto/market-last-params.dto';
+import { MarketDealsParams } from './dto/market-deals-params.dto';
+import { MarketStatusParams } from './dto/market-status-params.dto';
+import marketController from './controllers/market.controller';
 
 export const methods = {
   market: {
@@ -25,5 +25,5 @@ export const methods = {
     async status_today(args: MarketStatusTodayParams, callback) {
       callback(null, await marketController.status_today(args));
     },
-  },
+  }
 };

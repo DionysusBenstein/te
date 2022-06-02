@@ -5,9 +5,8 @@ import jayson from 'jayson';
 import kafkaProducer from './kafka/kafka.producer';
 import { methods } from './rpc';
 import { collapse } from './utils/rpc.util';
-import os from 'os';
+// import os from 'os';
 import cluster from 'cluster';
-
 // const clusterWorkerSize = os.cpus().length;
 const clusterWorkerSize = 1;
 

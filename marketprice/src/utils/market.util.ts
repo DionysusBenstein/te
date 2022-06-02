@@ -52,3 +52,5 @@ export async function onDealMessage(result) {
   dealInfo = JSON.parse(dealInfo);
   await marketUpdate(dealInfo);
 }
+
+

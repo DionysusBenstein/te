@@ -25,6 +25,8 @@ import { PendingDetailParams } from '../dto/pending-detail-params.dto';
 import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 
+import redisClient from '../config/database.config';
+
 class OrderService {
   marketList: Market[] = [];
   // NOTE: this is property for testing
@@ -35,12 +37,23 @@ class OrderService {
       const { name, stock, money } = marketConf;
       this.settleBookSize = 0;
 
+      const asks = [];
+      const bids = [];
+
+      for (const id of redisClient.lRange(`${name}:asks`, -1, 0)) {
+        asks.push(redisClient.get(`${name}:asks:${id}`));
+      }
+
+      for (const id of redisClient.lRange(`${name}:bids`, -1, 0)) {
+        asks.push(redisClient.get(`${name}:bids:${id}`));
+      }
+
       const market: Market = {
         name,
         stock,
         money,
-        asks: [],
-        bids: [],
+        asks,
+        bids,
       };
 
       this.marketList.push(market);
@@ -54,14 +67,14 @@ class OrderService {
   addAskOrder(order: Order) {
     const { asks }: Market = this.getMarketByName(order.market);
     const samePriceOrder = asks.find(x => {
-      return x.price === order.price && 
+      return x.price === order.price &&
              x.exchange_id === order.exchange_id &&
              x.exchange_name === order.exchange_name &&
              x.user_id === order.user_id
     });
 
     console.log(samePriceOrder);
-    
+
 
     if (samePriceOrder) {
       samePriceOrder.amount += order.amount;
@@ -71,7 +84,7 @@ class OrderService {
       samePriceOrder.deal_stock += order.deal_stock;
       samePriceOrder.update_time = getCurrentTimestamp();
       return samePriceOrder;
-    }  
+    }
 
     asks.push(order);
 
@@ -89,14 +102,14 @@ class OrderService {
   addBidOrder(order: Order) {
     const { bids }: Market = this.getMarketByName(order.market);
     const samePriceOrder = bids.find(x => {
-      return x.price === order.price && 
+      return x.price === order.price &&
              x.exchange_id === order.exchange_id &&
              x.exchange_name === order.exchange_name &&
              x.user_id === order.user_id
     });
 
     console.log(samePriceOrder);
-    
+
 
     if (samePriceOrder) {
       samePriceOrder.amount += order.amount;
@@ -106,7 +119,7 @@ class OrderService {
       samePriceOrder.deal_stock += order.deal_stock;
       samePriceOrder.update_time = getCurrentTimestamp();
       return samePriceOrder;
-    }    
+    }
 
     bids.push(order);
 
@@ -138,14 +151,21 @@ class OrderService {
 
         if (bidOrder.amount >= order.amount) {
           bidOrder.amount -= order.amount;
-          bidOrder.status = OrderStatus.PARTIALLY;
 
           if (bidOrder.amount === 0) {
             bidOrder.status = OrderStatus.COMPLETED;
             [dealOrder] = bids.splice(i, 1);
+
+            await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
+          } else {
+            bidOrder.status = OrderStatus.PARTIALLY;
+
+            await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
           }
 
           order.status = OrderStatus.COMPLETED;
+
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
           await updateOrderHistory(order, bidOrder);
           return dealOrder;
         }
@@ -155,6 +175,10 @@ class OrderService {
           bids.splice(i, 1);
           order.status = OrderStatus.PARTIALLY;
           bidOrder.status = OrderStatus.COMPLETED;
+
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, order);
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
+
           await updateOrderHistory(order, bidOrder);
           continue;
         }
@@ -181,15 +205,23 @@ class OrderService {
 
         if (askOrder.amount >= order.amount) {
           askOrder.amount -= order.amount;
-          askOrder.status = OrderStatus.PARTIALLY;
 
           if (askOrder.amount === 0) {
             askOrder.status = OrderStatus.COMPLETED;
             [dealOrder] = asks.splice(i, 1);
+
+            await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+          } else {
+            askOrder.status = OrderStatus.PARTIALLY;
+
+            await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, askOrder);
           }
 
           order.status = OrderStatus.COMPLETED;
           await updateOrderHistory(order, askOrder);
+
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+
           return dealOrder;
         }
 
@@ -198,6 +230,10 @@ class OrderService {
           asks.splice(i, 1);
           order.status = OrderStatus.PARTIALLY;
           askOrder.status = OrderStatus.COMPLETED;
+
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, order);
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, askOrder);
+
           await updateOrderHistory(order, askOrder);
           continue;
         }
@@ -292,7 +328,7 @@ class OrderService {
       return order;
     }
 
-    await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PUT);
+    await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PUT, order);
     return order;
   }
 
@@ -348,6 +384,8 @@ class OrderService {
       dealOrder.status = OrderStatus.COMPLETED;
       await updateOrderHistory(order, dealOrder);
 
+      await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+
       this.settleBookSize++;
       return order;
     }
@@ -379,7 +417,7 @@ class OrderService {
     const [order] = bids.splice(orderIndex, 1);
     order.status = OrderStatus.CANCELED;
     db.updateOrder(order, getCurrentTimestamp());
-    await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL);
+    await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL, order);
     return order;
   }
 
@@ -389,7 +427,7 @@ class OrderService {
     if (!side) {
       return {
         total: {
-          asks_count: asks.length, 
+          asks_count: asks.length,
           bids_count: bids.length
         },
         records: {
