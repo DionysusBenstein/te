@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@types/express": "^4.17.13",
+    "@types/redis": "^4.0.11",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
     "cluster": "^0.7.7",
@@ -29,6 +30,7 @@
     "jayson": "^3.6.6",
     "kafkajs": "^1.16.0",
     "loadash": "^1.0.0",
-    "pg": "^8.7.3"
+    "pg": "^8.7.3",
+    "redis": "^4.0.4"
   }
 }
