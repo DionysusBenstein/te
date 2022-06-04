@@ -9,17 +9,16 @@ export async function subscribeHelper(
   options: SubOptions) {
   const self = this;
   const { topics, event } = options;
+  const channelString = `${event}~${params.market}`;
 
   const consumer = await kafkaConsumer.subscribe(
     topics,
     (result) => {
       const { key } = result.message;
-      const channelString = `${event}~${params.market}`;
 
       console.log(`Message ${channelString} :: ${key}`);
       ws.emit(channelString, JSON.stringify({
-        stream: event,
-        market: params.market,
+        stream: channelString,
         data: self.query(params)
       }));
     }
@@ -29,7 +28,7 @@ export async function subscribeHelper(
 
   return {
     message: ResponseMessage.SUCCESS_SUB,
-    stream: event,
+    stream: channelString,
     ...params
   };
 }

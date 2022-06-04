@@ -68,9 +68,9 @@ class OrderService {
     const { asks }: Market = this.getMarketByName(order.market);
     const samePriceOrder = asks.find(x => {
       return x.price === order.price &&
-             x.exchange_id === order.exchange_id &&
-             x.exchange_name === order.exchange_name &&
-             x.user_id === order.user_id
+        x.exchange_id === order.exchange_id &&
+        x.exchange_name === order.exchange_name &&
+        x.user_id === order.user_id
     });
 
     console.log(samePriceOrder);
@@ -103,9 +103,9 @@ class OrderService {
     const { bids }: Market = this.getMarketByName(order.market);
     const samePriceOrder = bids.find(x => {
       return x.price === order.price &&
-             x.exchange_id === order.exchange_id &&
-             x.exchange_name === order.exchange_name &&
-             x.user_id === order.user_id
+        x.exchange_id === order.exchange_id &&
+        x.exchange_name === order.exchange_name &&
+        x.user_id === order.user_id
     });
 
     console.log(samePriceOrder);
@@ -142,8 +142,7 @@ class OrderService {
       for (let i = bids.length - 1; i >= 0; i--) {
         let bidOrder = bids[i];
 
-        // if (bidOrder.price < order.price) {
-        if (bidOrder.price != order.price) {
+        if (bidOrder.price < order.price) {
           break;
         }
 
@@ -196,8 +195,7 @@ class OrderService {
       for (let i = asks.length - 1; i >= 0; i--) {
         let askOrder = asks[i];
 
-        // if (askOrder.price > order.price) {
-        if (askOrder.price != order.price) {
+          if (askOrder.price > order.price) {
           break;
         }
 
