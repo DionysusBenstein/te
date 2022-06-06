@@ -1,0 +1,17 @@
+-- SELECT * FROM pg_extension;
+-- CREATE EXTENSION "uuid-ossp";
+
+-- INSERT INTO "markets_config" (
+--     "unique_id",
+--     "market_id",
+--     "market",
+--     "stock",
+--     "money"
+-- )
+-- VALUES (
+--     uuid_generate_v4(),
+--     'd7f092e0-3dfd-11eb-8a60-ede2d1cfaec6',
+--     'BTCEUR',
+--     'BTC',
+--     'EUR'
+-- );
