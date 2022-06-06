@@ -12,7 +12,6 @@ export async function orderbookUpdate(event, order: any) {
             side = 'bids';
             break;
     }
-
     switch (event) {
         case OrderEvent.PUT:
             await redisClient.lPush(`${order.market}:${side}`, order.id);
@@ -31,9 +30,7 @@ export async function orderbookUpdate(event, order: any) {
 }
 
 export async function onOrderMessage(result) {
-    let { value: order, event } = result.message;
+    let { value: order, key } = result.message;
 
-    order = JSON.parse(order);
-
-    await orderbookUpdate(event, order);
+    await orderbookUpdate(key.toString(), JSON.parse(order));
 }

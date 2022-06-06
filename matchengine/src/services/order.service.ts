@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
+import PromiseBlue from 'bluebird';
+
 import config from '../config/matchengine.config';
 import db from '../database/queries';
 import { getCurrentTimestamp } from '../utils/time.util';
@@ -40,31 +42,28 @@ class OrderService {
       const asks = [];
       const bids = [];
 
-      redisClient.lRange(`${name}:asks`, -1, 0).then(askIds => {
-        for (const id of askIds) {
-          redisClient.get(`${name}:asks:${id}`).then(ask => {
-            asks.push(ask);
-          });
+      PromiseBlue.props({
+        askIds: redisClient.lRange(`${name}:asks`, 0, -1),
+        bidIds: redisClient.lRange(`${name}:bids`, 0, 1)
+      }).then(async response => {
+        for (const id of response.askIds) {
+          asks.push(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
         }
-      });
 
-      redisClient.lRange(`${name}:bids`, -1, 0).then(bidIds => {
-        for (const id of bidIds) {
-          redisClient.get(`${name}:bids:${id}`).then(bid => {
-            bids.push(bid);
-          })
+        for (const id of response.bidIds) {
+          bids.push(JSON.parse(await redisClient.get(`${name}:bids:${id}`)));
         }
-      });
 
-      const market: Market = {
-        name,
-        stock,
-        money,
-        asks,
-        bids,
-      };
+        const market: Market = {
+          name,
+          stock,
+          money,
+          asks,
+          bids,
+        };
 
-      this.marketList.push(market);
+        this.marketList.push(market);
+      }).catch(console.log);
     }
   }
 
