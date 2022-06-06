@@ -12,10 +12,13 @@ import { deasyncRequestHelper } from '../utils/deasync.util';
 import { mergeKlineInfo } from '../utils/kline.util';
 import redisClient from '../config/database.config';
 import kafkaConsumer from '../kafka/kafka.consumer';
+import { onOrderMessage } from '../utils/orderbook.util';
 
 export class MarketService {
   constructor(private client: typeof redisClient) {
     kafkaConsumer.subscribe(KafkaTopic.DEALS, onDealMessage);
+    kafkaConsumer.subscribe(KafkaTopic.ORDERS, onOrderMessage);
+
   }
 
   async getLast({ market }: MarketLastParams) {
