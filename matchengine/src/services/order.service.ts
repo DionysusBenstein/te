@@ -2,13 +2,13 @@ import { v4 as uuidv4 } from 'uuid';
 import config from '../config/matchengine.config';
 import db from '../database/queries';
 import { getCurrentTimestamp } from '../utils/time.util';
+import kafkaProducer from '../kafka/kafka.producer';
+import { Market, Order, Deal, MatchEngineConfig } from '../typings/types';
 import {
   appendOrderDeal,
   getAllPending,
   updateOrderHistory,
 } from '../utils/trade.util';
-import kafkaProducer from '../kafka/kafka.producer';
-import { Market, Order, Deal, MatchEngineConfig } from '../typings/types';
 import {
   OrderSide,
   OrderType,

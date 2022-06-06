@@ -34,6 +34,6 @@ export const redirects = {
     status: redirect(services.marketprice),
     status_today: redirect(services.marketprice),
     list: redirect(services.matchengine),
-    summary: redirect(services.matchengine),
+    summary: redirect(services.marketprice),
   },
 } as const;

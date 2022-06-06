@@ -84,6 +84,10 @@ export class MarketController {
 
     return await this.marketService.getKline(data);
   }
+
+  async summary() {
+    return await this.marketService.summary();
+  }
 }
 
 export default new MarketController(marketService);

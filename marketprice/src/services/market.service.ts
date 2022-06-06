@@ -6,10 +6,12 @@ import { KlineParams } from '../dto/kline-params.dto';
 import { KafkaTopic } from '../typings/enums/enums';
 import { onDealMessage } from '../utils/market.util';
 import { KlineInfo, MarketStatus } from '../typings/types/market-info.type';
+import config from '../config/marketprice.config';
+import client from '../config/router.config';
+import { deasyncRequestHelper } from '../utils/deasync.util';
+import { mergeKlineInfo } from '../utils/kline.util';
 import redisClient from '../config/database.config';
 import kafkaConsumer from '../kafka/kafka.consumer';
-import config from '../config/marketprice.config';
-import { mergeKlineInfo } from '../utils/kline.util';
 
 export class MarketService {
   constructor(private client: typeof redisClient) {
@@ -70,7 +72,18 @@ export class MarketService {
   }
 
   async getStatusToday({ market }: MarketStatusTodayParams) {
-    const status = await this.getStatus({ market, period: 86400 });
+    const status: MarketStatus = await this.getStatus({ market, period: 86400 });
+
+    if (!status) {
+      return {
+        open: 0,
+        last: 0,
+        high: 0,
+        low: 0,
+        volume: 0
+      };
+    }
+
     status.period = undefined;
     return status;
   }
@@ -100,6 +113,29 @@ export class MarketService {
     }
 
     return klines.slice(offset, limit);
+  }
+
+  async summary() {
+    const marketList: any = deasyncRequestHelper('market.list', {}, client);
+    return Promise.all(marketList.map(async (market: any) => {
+      const status: any = await this.getStatusToday({ market: market.name });
+      const percentChange: number = -(100 - status.close / status.open * 100).toFixed(3) || 0;
+      const change: number = status.close - status.open || 0;
+      const colour = change >= 0 ? "green" : "red";
+
+      return {
+        pairId: market.pairId,
+        pairName: `${market.stock}-${market.money}`,
+        percentChange,
+        change,
+        colour,
+        price: status.last,
+        usdPrice: 100,
+        xdcPrice: 100,
+        favStatus: "inActive",
+        ...status
+      }
+    }));
   }
 }
 

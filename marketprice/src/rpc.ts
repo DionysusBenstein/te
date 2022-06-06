@@ -25,5 +25,9 @@ export const methods = {
     async status_today(args: MarketStatusTodayParams, callback) {
       callback(null, await marketController.status_today(args));
     },
+
+    async summary(args, callback) {
+      callback(null, await marketController.summary());
+    }
   }
 };

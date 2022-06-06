@@ -31,6 +31,17 @@ export function updateKlineInfo(
 }
 
 export function mergeKlineInfo(klines: KlineInfo[]): KlineInfo {
+  if (klines.length <= 0) {
+    return {
+      time: 0,
+      open: 1,
+      close: 1,
+      high: 1,
+      low: 1,
+      volume: 0
+    }
+  }
+
   let newKline: KlineInfo = {
     time: klines[0].time,
     open: klines[0].open,
