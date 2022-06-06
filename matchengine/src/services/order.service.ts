@@ -44,7 +44,7 @@ class OrderService {
 
       PromiseBlue.props({
         askIds: redisClient.lRange(`${name}:asks`, 0, -1),
-        bidIds: redisClient.lRange(`${name}:bids`, 0, 1)
+        bidIds: redisClient.lRange(`${name}:bids`, 0, -1)
       }).then(async response => {
         for (const id of response.askIds) {
           asks.push(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
