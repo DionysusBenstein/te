@@ -7,6 +7,7 @@ import todayController from './controllers/today.controller';
 import stateController from './controllers/state.controller';
 import priceController from './controllers/price.controller';
 import klineController from './controllers/kline.controller';
+import summaryController from './controllers/summary.controller';
 
 export const methods = {
   kline: {
@@ -64,5 +65,11 @@ export const methods = {
     subscribe: assetController.subscribe,
     update: assetController.update,
     unsubscribe: assetController.unsubscribe,
+  },
+  summary: {
+    query: summaryController.query,
+    subscribe: summaryController.subscribe,
+    update: summaryController.update,
+    unsubscribe: summaryController.unsubscribe,
   },
 };

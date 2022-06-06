@@ -7,8 +7,6 @@ export function broadcast(wss: any, msg: any) {
 }
 
 export function updateHelper(params: any, ws: any, wss: any): string {
-  console.log(this);
-  
   broadcast(wss, JSON.stringify(this.query(params)));
   return ResponseMessage.SUCCESS_NOTIFY;
 }

@@ -9,7 +9,7 @@ export async function subscribeHelper(
   options: SubOptions) {
   const self = this;
   const { topics, event } = options;
-  const channelString = `${event}~${params.market}`;
+  const channelString = params.market ? `${event}~${params.market}` : event;
 
   const consumer = await kafkaConsumer.subscribe(
     topics,
