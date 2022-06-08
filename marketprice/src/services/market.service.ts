@@ -10,7 +10,7 @@ import config from '../config/marketprice.config';
 import client from '../config/router.config';
 import { deasyncRequestHelper } from '../utils/deasync.util';
 import { mergeKlineInfo } from '../utils/kline.util';
-import redisClient from '../config/database.config';
+import { sequelize, redisClient } from '../config/database.config';
 import kafkaConsumer from '../kafka/kafka.consumer';
 import { onOrderMessage } from '../utils/orderbook.util';
 
@@ -122,6 +122,11 @@ export class MarketService {
     const marketList: any = deasyncRequestHelper('market.list', {}, client);
     return Promise.all(marketList.map(async (market: any) => {
       const status: any = await this.getStatusToday({ market: market.name });
+      const usdPrice = await sequelize.query('SELECT usdPrice from LivPrice WHERE currencyName = :market', {
+        replacements: {
+          market
+        }
+      });
       const percentChange: number = -(100 - status.close / status.open * 100).toFixed(3) || 0;
       const change: number = status.close - status.open || 0;
       const colour = change >= 0 ? "green" : "red";
@@ -133,7 +138,7 @@ export class MarketService {
         change,
         colour,
         price: status.last,
-        usdPrice: 100,
+        usdPrice,
         xdcPrice: 100,
         favStatus: "inActive",
         ...status
