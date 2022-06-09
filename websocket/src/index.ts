@@ -37,7 +37,7 @@ io.on('connection', socket => {
 });
 
 app.get("/", (req, res) => {
-  res.send("websocket healthcheck");
+  res.send("websocket healthcheck\n");
 });
 
 server.listen(port, () => console.log(`Running on port ${port}`))
