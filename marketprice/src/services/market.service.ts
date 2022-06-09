@@ -134,8 +134,7 @@ export class MarketService {
         type: QueryTypes.SELECT
       });
 
-      const usdPrice = (usdPriceQueryResult || MSSERVER_MISSING_CURRENCY).usdPrice;
-
+      const usdPrice: number = (usdPriceQueryResult || MSSERVER_MISSING_CURRENCY).usdPrice;
       const percentChange: number = -(100 - status.close / status.open * 100).toFixed(3) || 0;
       const change: number = status.close - status.open || 0;
       const colour = change >= 0 ? 'green' : 'red';
@@ -147,8 +146,8 @@ export class MarketService {
         change,
         colour,
         price: status.last,
-        usdPrice,
-        xdcPrice: 100,
+        usdPrice: status.last * usdPrice,
+        xdcPrice: 0,
         favStatus: "inActive",
         ...status
       }
