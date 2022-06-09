@@ -10,7 +10,9 @@ CREATE TABLE order_history (
     "status"         VARCHAR(9) NOT NULL,
     "price"          DECIMAL(30,8) NOT NULL,
     "amount"         DECIMAL(30,8) NOT NULL,
+    "filledQty"      DECIMAL(30,8) NOT NULL,
     "total"          DECIMAL(30,8) NOT NULL,
+    "executedTotal"  DECIMAL(30,8) NOT NULL,
 
     "total_fee"       DECIMAL(30,4) NOT NULL,
     "deal_money"      DECIMAL(30,16) NOT NULL,

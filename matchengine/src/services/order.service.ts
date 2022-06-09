@@ -80,9 +80,6 @@ class OrderService {
         x.user_id === order.user_id
     });
 
-    console.log(samePriceOrder);
-
-
     if (samePriceOrder) {
       samePriceOrder.amount += order.amount;
       samePriceOrder.total += order.total;
@@ -156,16 +153,17 @@ class OrderService {
         let dealOrder: Order;
 
         if (bidOrder.amount >= order.amount) {
-          bidOrder.amount -= order.amount;
+          bidOrder.filledQty += order.amount;
+          bidOrder.executedTotal = bidOrder.filledQty * bidOrder.price;
 
-          if (bidOrder.amount === 0) {
+          if (bidOrder.amount === bidOrder.filledQty) {
             bidOrder.status = OrderStatus.COMPLETED;
             [dealOrder] = bids.splice(i, 1);
-
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
           } else {
             bidOrder.status = OrderStatus.PARTIALLY;
 
+            [dealOrder] = bids.slice(i, i + 1);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
           }
 
@@ -177,7 +175,8 @@ class OrderService {
         }
 
         if (bidOrder.amount < order.amount) {
-          order.amount -= bidOrder.amount;
+          order.filledQty += bidOrder.amount;
+          order.executedTotal = order.filledQty * order.price;
           bids.splice(i, 1);
           order.status = OrderStatus.PARTIALLY;
           bidOrder.status = OrderStatus.COMPLETED;
@@ -218,13 +217,12 @@ class OrderService {
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
           } else {
             askOrder.status = OrderStatus.PARTIALLY;
-
+            [dealOrder] = asks.slice(i, i + 1);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, askOrder);
           }
 
           order.status = OrderStatus.COMPLETED;
           await updateOrderHistory(order, askOrder);
-
           await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
 
           return dealOrder;
@@ -294,7 +292,9 @@ class OrderService {
       money,
       price,
       amount,
+      filledQty: 0,      
       total: amount * price,
+      executedTotal: 0,
       status: OrderStatus.ACTIVE,
       total_fee,
       deal_money: amount - total_fee,
@@ -360,6 +360,7 @@ class OrderService {
       money,
       status: OrderStatus.COMPLETED,
       amount,
+      filledQty: amount,
       total_fee,
       deal_money: amount - total_fee,
       deal_stock: amount - total_fee,
@@ -388,7 +389,6 @@ class OrderService {
       order.status = OrderStatus.COMPLETED;
       dealOrder.status = OrderStatus.COMPLETED;
       await updateOrderHistory(order, dealOrder);
-
       await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
 
       this.settleBookSize++;

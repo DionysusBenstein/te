@@ -13,7 +13,9 @@ export type Order = {
   status: string;
   price?: number;
   amount: number;
+  filledQty: number;
   total?: number;
+  executedTotal?: number;
   total_fee: number;
   deal_money: number;
   deal_stock: number;
