@@ -1,3 +1,4 @@
+import { QueryTypes } from 'sequelize';
 import { MarketStatusTodayParams } from './../dto/market-status-today-params.dto';
 import { MarketStatusParams } from './../dto/market-status-params.dto';
 import { MarketDealsParams } from './../dto/market-deals-params.dto';
@@ -13,6 +14,8 @@ import { mergeKlineInfo } from '../utils/kline.util';
 import { sequelize, redisClient } from '../config/database.config';
 import kafkaConsumer from '../kafka/kafka.consumer';
 import { onOrderMessage } from '../utils/orderbook.util';
+
+const MSSERVER_MISSING_CURRENCY = { usdPrice: 0 };
 
 export class MarketService {
   constructor(private client: typeof redisClient) {
@@ -122,14 +125,20 @@ export class MarketService {
     const marketList: any = deasyncRequestHelper('market.list', {}, client);
     return Promise.all(marketList.map(async (market: any) => {
       const status: any = await this.getStatusToday({ market: market.name });
-      const usdPrice = await sequelize.query('SELECT usdPrice from LivPrice WHERE currencyName = :market', {
+      const usdPriceQueryResult: any = await sequelize.query('SELECT usdPrice from LivePrice WHERE currencyName = :market', {
         replacements: {
-          market
-        }
+          market: market.money
+        },
+        plain: true,
+        raw: true,
+        type: QueryTypes.SELECT
       });
+
+      const usdPrice = (usdPriceQueryResult || MSSERVER_MISSING_CURRENCY).usdPrice;
+
       const percentChange: number = -(100 - status.close / status.open * 100).toFixed(3) || 0;
       const change: number = status.close - status.open || 0;
-      const colour = change >= 0 ? "green" : "red";
+      const colour = change >= 0 ? 'green' : 'red';
 
       return {
         pairId: market.pairId,

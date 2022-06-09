@@ -13,9 +13,26 @@ try {
   console.log(err);
 }
 
-export const sequelize = new Sequelize('Globiance', 'globiance_db', 'M4lt4!23!', {
-  dialect: 'mssql',
-  host: '95.211.7.220'
+export const sequelize = new Sequelize('globiance_staging', 'globiance_db', 'M4lt4!23!', {
+  host: "192.168.1.9",
+  port: 14433,
+  dialect: "mssql",
+  logging: false,
+  dialectOptions: {
+    options: {
+      requestTimeout: 300000,
+      cryptoCredentialsDetails: {
+        minVersion: 'TLSv1'
+      }
+    }
+  },
+  pool: {
+    max: 500,
+    min: 0,
+    idle: 20000,
+    acquire: 100000,
+    evict: 20000
+  }
 });
 
 try {
