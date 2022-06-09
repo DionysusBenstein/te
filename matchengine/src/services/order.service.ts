@@ -162,7 +162,6 @@ class OrderService {
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
           } else {
             bidOrder.status = OrderStatus.PARTIALLY;
-
             [dealOrder] = bids.slice(i, i + 1);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
           }
@@ -208,12 +207,12 @@ class OrderService {
         let dealOrder: Order;
 
         if (askOrder.amount >= order.amount) {
-          askOrder.amount -= order.amount;
+          askOrder.filledQty += order.amount;
+          askOrder.executedTotal = askOrder.filledQty * askOrder.price;
 
-          if (askOrder.amount === 0) {
+          if (askOrder.amount === askOrder.filledQty) {
             askOrder.status = OrderStatus.COMPLETED;
             [dealOrder] = asks.splice(i, 1);
-
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
           } else {
             askOrder.status = OrderStatus.PARTIALLY;
@@ -229,7 +228,8 @@ class OrderService {
         }
 
         if (askOrder.amount < order.amount) {
-          order.amount -= askOrder.amount;
+          order.filledQty += askOrder.amount;
+          order.executedTotal = order.filledQty * order.price;
           asks.splice(i, 1);
           order.status = OrderStatus.PARTIALLY;
           askOrder.status = OrderStatus.COMPLETED;
