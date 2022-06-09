@@ -18,7 +18,7 @@ const rpcServer = new jayson.Server(redirectsCollapsed);
 app.post("/", rpcServer.middleware());
 
 app.get("/", (req, res) => {
-  res.send("router healthcheck");
+  res.send("router healthcheck\n");
 });
 
 app.listen(port, () => console.log(`Running on port ${port}`));

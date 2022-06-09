@@ -21,7 +21,7 @@ const map = _.reduce(methods, collapse('', '.'), {});
 
 app.post('/', new jayson.Server(map).middleware());
 app.get('/', (req, res) => {
-  res.send('matchengine healthcheck');
+  res.send('matchengine healthcheck\n');
 });
 
 const start = async () => {

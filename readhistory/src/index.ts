@@ -15,7 +15,7 @@ const map = _.reduce(methods, collapse("", "."), {});
 app.post("/", new jayson.Server(map).middleware());
 
 app.get("/", (req, res) => {
-  res.send("readhistory healthcheck");
+  res.send("readhistory healthcheck\n");
 });
 
 app.listen(port, () => console.log(`Running on port ${port}`));
