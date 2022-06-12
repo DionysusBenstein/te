@@ -33,7 +33,7 @@ export async function updateOrderHistory(
 export async function appendOrderDeal(
   order: Order,
   dealOrder: Order
-): Promise<Deal> {
+): Promise<Deal[]> {
   const firstDeal: Deal = {
     id: uuidv4(),
     exchange_id: order.exchange_id,
@@ -47,9 +47,9 @@ export async function appendOrderDeal(
     stock: order.stock,
     money: order.money,
     role: MarketRole.TAKER,
-    price: order.price,
-    amount: order.amount,
-    total: order.price * order.amount,
+    price: dealOrder.price,
+    amount: order.amount < dealOrder.amount ? order.amount : dealOrder.amount,
+    total: order.executedTotal,
     deal: 1,
     fee: 1,
     deal_fee: 1,
@@ -69,9 +69,9 @@ export async function appendOrderDeal(
     stock: dealOrder.stock,
     money: dealOrder.money,
     role: MarketRole.TAKER,
-    price: dealOrder.price,
-    amount: dealOrder.amount,
-    total: dealOrder.price * dealOrder.amount,
+    price: order.price,
+    amount: order.amount > dealOrder.amount ? order.amount : dealOrder.amount,
+    total: dealOrder.executedTotal,
     deal: 1,
     fee: 1,
     deal_fee: 1,
@@ -81,7 +81,7 @@ export async function appendOrderDeal(
   await db.appendDealHistory(firstDeal);
   await db.appendDealHistory(secondDeal);
 
-  return firstDeal;
+  return [firstDeal, secondDeal];
 }
 
 export async function appendTradeBalance(
@@ -92,16 +92,6 @@ export async function appendTradeBalance(
   const time = getCurrentTimestamp();
   const { balance } = await db.getLastBalance(user_id, [money]);
   const newBalance = +balance + change;
-
-  console.log('');
-  console.log('::::::::::::::::: appendTradeBalances');
-  console.log('-------------------------------------');
-  console.log('user_id:', user_id);
-  console.log('money:', money);
-  console.log('change:', change);
-  console.log('balance:', balance);
-  console.log('newBalance:', newBalance);
-  console.log('');
 
   await db.appendBalanceHistory({
     user_id: user_id,

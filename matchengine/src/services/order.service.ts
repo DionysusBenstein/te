@@ -46,13 +46,13 @@ class OrderService {
         askIds: redisClient.lRange(`${name}:asks`, 0, -1),
         bidIds: redisClient.lRange(`${name}:bids`, 0, -1)
       }).then(async response => {
-        for (const id of response.askIds) {
-          asks.push(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
-        }
+        // for (const id of response.askIds) {
+        //   asks.push(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
+        // }
 
-        for (const id of response.bidIds) {
-          bids.push(JSON.parse(await redisClient.get(`${name}:bids:${id}`)));
-        }
+        // for (const id of response.bidIds) {
+        //   bids.push(JSON.parse(await redisClient.get(`${name}:bids:${id}`)));
+        // }
 
         const market: Market = {
           name,
@@ -112,9 +112,6 @@ class OrderService {
         x.user_id === order.user_id
     });
 
-    console.log(samePriceOrder);
-
-
     if (samePriceOrder) {
       samePriceOrder.amount += order.amount;
       samePriceOrder.total += order.total;
@@ -141,6 +138,7 @@ class OrderService {
   async executeAskLimitOrder(order: Order) {
     const { bids }: Market = this.getMarketByName(order.market);
     const n: number = bids.length;
+    let dealOrderList: Order[] = [];
 
     if (n !== 0 && bids[n - 1].price >= order.price) {
       for (let i = bids.length - 1; i >= 0; i--) {
@@ -150,19 +148,24 @@ class OrderService {
           break;
         }
 
-        let dealOrder: Order;
+        let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filledQty;
+        let remainOrderAmount: number = order.amount - order.filledQty;
 
-        if (bidOrder.amount >= order.amount) {
-          bidOrder.filledQty += order.amount;
+        if (remainBidOrderAmount >= remainOrderAmount) {
+          order.filledQty += remainOrderAmount;
+          order.executedTotal = order.filledQty * order.price;
+          bidOrder.filledQty += remainOrderAmount;
           bidOrder.executedTotal = bidOrder.filledQty * bidOrder.price;
 
           if (bidOrder.amount === bidOrder.filledQty) {
             bidOrder.status = OrderStatus.COMPLETED;
-            [dealOrder] = bids.splice(i, 1);
+            const [dealOrder] = bids.splice(i, 1); 
+            dealOrderList.push(dealOrder);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
           } else {
             bidOrder.status = OrderStatus.PARTIALLY;
-            [dealOrder] = bids.slice(i, i + 1);
+            const [dealOrder] = bids.slice(i, i + 1);
+            dealOrderList.push(dealOrder);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
           }
 
@@ -170,13 +173,17 @@ class OrderService {
 
           await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
           await updateOrderHistory(order, bidOrder);
-          return dealOrder;
+          return dealOrderList;
         }
 
-        if (bidOrder.amount < order.amount) {
-          order.filledQty += bidOrder.amount;
+        if (remainBidOrderAmount < remainOrderAmount) {
+          order.filledQty += remainBidOrderAmount;
           order.executedTotal = order.filledQty * order.price;
-          bids.splice(i, 1);
+          bidOrder.filledQty += remainOrderAmount;
+          bidOrder.executedTotal = bidOrder.filledQty * bidOrder.price;
+
+          const [dealOrder] = bids.splice(i, 1);
+          dealOrderList.push(dealOrder);
           order.status = OrderStatus.PARTIALLY;
           bidOrder.status = OrderStatus.COMPLETED;
 
@@ -190,33 +197,41 @@ class OrderService {
     }
 
     this.addAskOrder(order);
+    return dealOrderList;
   }
 
   async executeBidLimitOrder(order: Order) {
     const { asks }: Market = this.getMarketByName(order.market);
     const n: number = asks.length;
+    let dealOrderList: Order[] = [];
 
     if (n !== 0 && asks[n - 1].price <= order.price) {
       for (let i = asks.length - 1; i >= 0; i--) {
         let askOrder = asks[i];
 
-          if (askOrder.price > order.price) {
+        if (askOrder.price > order.price) {
           break;
         }
 
-        let dealOrder: Order;
+        let remainAskOrderAmount: number = askOrder.amount - askOrder.filledQty;
+        let remainOrderAmount: number = order.amount - order.filledQty;
 
-        if (askOrder.amount >= order.amount) {
-          askOrder.filledQty += order.amount;
+        if (remainAskOrderAmount >= remainOrderAmount) {
+          
+          order.filledQty += remainOrderAmount;
+          order.executedTotal = order.filledQty * order.price;
+          askOrder.filledQty += remainOrderAmount;
           askOrder.executedTotal = askOrder.filledQty * askOrder.price;
 
           if (askOrder.amount === askOrder.filledQty) {
             askOrder.status = OrderStatus.COMPLETED;
-            [dealOrder] = asks.splice(i, 1);
+            const [dealOrder] = asks.splice(i, 1);
+            dealOrderList.push(dealOrder);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
           } else {
             askOrder.status = OrderStatus.PARTIALLY;
-            [dealOrder] = asks.slice(i, i + 1);
+            const [dealOrder] = asks.slice(i, i + 1);
+            dealOrderList.push(dealOrder)
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, askOrder);
           }
 
@@ -224,13 +239,17 @@ class OrderService {
           await updateOrderHistory(order, askOrder);
           await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
 
-          return dealOrder;
+          return dealOrderList;
         }
 
-        if (askOrder.amount < order.amount) {
-          order.filledQty += askOrder.amount;
+        if (remainAskOrderAmount < remainOrderAmount) {
+          order.filledQty += remainAskOrderAmount;
           order.executedTotal = order.filledQty * order.price;
-          asks.splice(i, 1);
+          askOrder.filledQty += remainOrderAmount;
+          askOrder.executedTotal = askOrder.filledQty * askOrder.price;
+
+          const [dealOrder] = asks.splice(i, 1);
+          dealOrderList.push(dealOrder);
           order.status = OrderStatus.PARTIALLY;
           askOrder.status = OrderStatus.COMPLETED;
 
@@ -244,6 +263,7 @@ class OrderService {
     }
 
     this.addBidOrder(order);
+    return dealOrderList;
   }
 
   executeAskMarketOrder(order: Order): Order {
@@ -292,7 +312,7 @@ class OrderService {
       money,
       price,
       amount,
-      filledQty: 0,      
+      filledQty: 0,
       total: amount * price,
       executedTotal: 0,
       status: OrderStatus.ACTIVE,
@@ -305,31 +325,33 @@ class OrderService {
 
     db.appendOrderHistory(order);
 
-    let dealOrder: Order;
+    let dealOrderList: Order[] = [];
     if (side === OrderSide.ASK) {
-      dealOrder = await this.executeAskLimitOrder(order);
+      dealOrderList = await this.executeAskLimitOrder(order);
     } else {
-      dealOrder = await this.executeBidLimitOrder(order);
+      dealOrderList = await this.executeBidLimitOrder(order);
     }
 
-    if (dealOrder) {
-      const updateTime = getCurrentTimestamp();
+    if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
+      for (const dealOrder of dealOrderList) {
+        const updateTime = getCurrentTimestamp();
 
-      order.update_time = updateTime;
-      dealOrder.update_time = updateTime;
+        order.update_time = updateTime;
+        dealOrder.update_time = updateTime;
 
-      db.updateOrder(order, updateTime);
-      db.updateOrder(dealOrder, updateTime);
+        db.updateOrder(order, updateTime);
+        db.updateOrder(dealOrder, updateTime);
 
-      const deal: Deal = await appendOrderDeal(order, dealOrder);
+        const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
 
-      await kafkaProducer.pushMessage(
-        KafkaTopic.DEALS,
-        OrderEvent.FINISH,
-        deal
-      );
+        await kafkaProducer.pushMessage(
+          KafkaTopic.DEALS,
+          OrderEvent.FINISH,
+          firstDeal
+        );
 
-      this.settleBookSize++;
+        this.settleBookSize++;
+      }
       return order;
     }
 
