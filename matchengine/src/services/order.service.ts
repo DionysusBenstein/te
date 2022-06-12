@@ -46,13 +46,13 @@ class OrderService {
         askIds: redisClient.lRange(`${name}:asks`, 0, -1),
         bidIds: redisClient.lRange(`${name}:bids`, 0, -1)
       }).then(async response => {
-        // for (const id of response.askIds) {
-        //   asks.push(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
-        // }
+        for (const id of response.askIds) {
+          asks.push(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
+        }
 
-        // for (const id of response.bidIds) {
-        //   bids.push(JSON.parse(await redisClient.get(`${name}:bids:${id}`)));
-        // }
+        for (const id of response.bidIds) {
+          bids.push(JSON.parse(await redisClient.get(`${name}:bids:${id}`)));
+        }
 
         const market: Market = {
           name,
@@ -73,23 +73,6 @@ class OrderService {
 
   addAskOrder(order: Order) {
     const { asks }: Market = this.getMarketByName(order.market);
-    const samePriceOrder = asks.find(x => {
-      return x.price === order.price &&
-        x.exchange_id === order.exchange_id &&
-        x.exchange_name === order.exchange_name &&
-        x.user_id === order.user_id
-    });
-
-    if (samePriceOrder) {
-      samePriceOrder.amount += order.amount;
-      samePriceOrder.total += order.total;
-      samePriceOrder.total_fee += order.total_fee;
-      samePriceOrder.deal_money += order.deal_money;
-      samePriceOrder.deal_stock += order.deal_stock;
-      samePriceOrder.update_time = getCurrentTimestamp();
-      return samePriceOrder;
-    }
-
     asks.push(order);
 
     let i = asks.length - 1;
@@ -105,23 +88,6 @@ class OrderService {
 
   addBidOrder(order: Order) {
     const { bids }: Market = this.getMarketByName(order.market);
-    const samePriceOrder = bids.find(x => {
-      return x.price === order.price &&
-        x.exchange_id === order.exchange_id &&
-        x.exchange_name === order.exchange_name &&
-        x.user_id === order.user_id
-    });
-
-    if (samePriceOrder) {
-      samePriceOrder.amount += order.amount;
-      samePriceOrder.total += order.total;
-      samePriceOrder.total_fee += order.total_fee;
-      samePriceOrder.deal_money += order.deal_money;
-      samePriceOrder.deal_stock += order.deal_stock;
-      samePriceOrder.update_time = getCurrentTimestamp();
-      return samePriceOrder;
-    }
-
     bids.push(order);
 
     let i = bids.length - 1;
@@ -400,12 +366,12 @@ class OrderService {
     if (dealOrder) {
       order.update_time = getCurrentTimestamp();
       order.price = dealOrder.price;
-      const deal: Deal = await appendOrderDeal(order, dealOrder);
+      const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
 
       await kafkaProducer.pushMessage(
         KafkaTopic.DEALS,
         OrderEvent.FINISH,
-        deal
+        firstDeal
       );
 
       order.status = OrderStatus.COMPLETED;

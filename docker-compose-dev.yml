@@ -6,19 +6,19 @@ services:
     image: zookeeper
     hostname: zookeeper
     ports:
-      - 42181:2181
+      - 32181:2181
 
   kafka:
     image: confluentinc/cp-kafka:5.4.0
     container_name: kafka
     hostname: kafka
     ports:
-      - 49092:49092
+      - 39092:39092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:49092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:49092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:39092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:39092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -32,7 +32,7 @@ services:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis.conf
     ports:
-      - 46379:6379
+      - 36379:6379
     command: redis-server /usr/local/etc/redis.conf
       
   postgres:
@@ -40,7 +40,7 @@ services:
     hostname: postgres
     image: postgres
     ports:
-      - 45432:5432
+      - 35432:5432
     volumes:
       - ./postgres/scripts:/docker-entrypoint-initdb.d
       - ./postgres/pgdata:/var/lib/postgresql/pgdata
@@ -61,7 +61,7 @@ services:
       - ./marketprice:/usr/src/marketprice
       - /usr/src/marketprice/node_modules
     ports:
-      - 4000:3000
+      - 3000:3000
     depends_on:
       - zookeeper
       - kafka
@@ -79,7 +79,7 @@ services:
       - ./matchengine:/usr/src/matchengine
       - /usr/src/matchengine/node_modules
     ports:
-      - 4001:3001
+      - 3001:3001
     depends_on:
       - kafka
     restart: always
@@ -96,7 +96,7 @@ services:
       - ./readhistory:/usr/src/readhistory
       - /usr/src/readhistory/node_modules
     ports:
-      - 4002:3002
+      - 3002:3002
     restart: always
     command: npm run dev
 
@@ -111,7 +111,7 @@ services:
       - ./router:/usr/src/router
       - /usr/src/router/node_modules
     ports:
-      - 4003:3003
+      - 3003:3003
     restart: always
     command: npm run dev
 
@@ -126,7 +126,7 @@ services:
       - ./websocket:/usr/src/websocket
       - /usr/src/websocket/node_modules
     ports:
-      - 4041:3031
+      - 3041:3031
     restart: always
     command: npm run dev
 
