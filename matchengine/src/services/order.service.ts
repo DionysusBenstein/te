@@ -107,25 +107,25 @@ class OrderService {
     let dealOrderList: Order[] = [];
 
     if (n !== 0 && bids[n - 1].price >= order.price) {
-      for (let i = bids.length - 1; i >= 0; i--) {
+      for (let i = n - 1; i >= 0; i--) {
         let bidOrder = bids[i];
 
         if (bidOrder.price < order.price) {
           break;
         }
 
-        let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filledQty;
-        let remainOrderAmount: number = order.amount - order.filledQty;
+        let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
+        let remainOrderAmount: number = order.amount - order.filled_qty;
 
         if (remainBidOrderAmount >= remainOrderAmount) {
-          order.filledQty += remainOrderAmount;
-          order.executedTotal = order.filledQty * order.price;
-          bidOrder.filledQty += remainOrderAmount;
-          bidOrder.executedTotal = bidOrder.filledQty * bidOrder.price;
+          order.filled_qty += remainOrderAmount;
+          order.executed_total = order.filled_qty * order.price;
+          bidOrder.filled_qty += remainOrderAmount;
+          bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
-          if (bidOrder.amount === bidOrder.filledQty) {
+          if (bidOrder.amount === bidOrder.filled_qty) {
             bidOrder.status = OrderStatus.COMPLETED;
-            const [dealOrder] = bids.splice(i, 1); 
+            const [dealOrder] = bids.splice(i, 1);
             dealOrderList.push(dealOrder);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
           } else {
@@ -143,10 +143,10 @@ class OrderService {
         }
 
         if (remainBidOrderAmount < remainOrderAmount) {
-          order.filledQty += remainBidOrderAmount;
-          order.executedTotal = order.filledQty * order.price;
-          bidOrder.filledQty += remainOrderAmount;
-          bidOrder.executedTotal = bidOrder.filledQty * bidOrder.price;
+          order.filled_qty += remainBidOrderAmount;
+          order.executed_total = order.filled_qty * order.price;
+          bidOrder.filled_qty += remainOrderAmount;
+          bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
           const [dealOrder] = bids.splice(i, 1);
           dealOrderList.push(dealOrder);
@@ -172,24 +172,23 @@ class OrderService {
     let dealOrderList: Order[] = [];
 
     if (n !== 0 && asks[n - 1].price <= order.price) {
-      for (let i = asks.length - 1; i >= 0; i--) {
+      for (let i = n - 1; i >= 0; i--) {
         let askOrder = asks[i];
 
         if (askOrder.price > order.price) {
           break;
         }
 
-        let remainAskOrderAmount: number = askOrder.amount - askOrder.filledQty;
-        let remainOrderAmount: number = order.amount - order.filledQty;
+        let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
+        let remainOrderAmount: number = order.amount - order.filled_qty;
 
         if (remainAskOrderAmount >= remainOrderAmount) {
-          
-          order.filledQty += remainOrderAmount;
-          order.executedTotal = order.filledQty * order.price;
-          askOrder.filledQty += remainOrderAmount;
-          askOrder.executedTotal = askOrder.filledQty * askOrder.price;
+          order.filled_qty += remainOrderAmount;
+          order.executed_total = order.filled_qty * order.price;
+          askOrder.filled_qty += remainOrderAmount;
+          askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
-          if (askOrder.amount === askOrder.filledQty) {
+          if (askOrder.amount === askOrder.filled_qty) {
             askOrder.status = OrderStatus.COMPLETED;
             const [dealOrder] = asks.splice(i, 1);
             dealOrderList.push(dealOrder);
@@ -209,10 +208,10 @@ class OrderService {
         }
 
         if (remainAskOrderAmount < remainOrderAmount) {
-          order.filledQty += remainAskOrderAmount;
-          order.executedTotal = order.filledQty * order.price;
-          askOrder.filledQty += remainOrderAmount;
-          askOrder.executedTotal = askOrder.filledQty * askOrder.price;
+          order.filled_qty += remainAskOrderAmount;
+          order.executed_total = order.filled_qty * order.price;
+          askOrder.filled_qty += remainOrderAmount;
+          askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
           const [dealOrder] = asks.splice(i, 1);
           dealOrderList.push(dealOrder);
@@ -232,26 +231,124 @@ class OrderService {
     return dealOrderList;
   }
 
-  executeAskMarketOrder(order: Order): Order {
+  // NOTE: strongly needs to refactor
+  async executeAskMarketOrder(order: Order) {
     const { bids }: Market = this.getMarketByName(order.market);
+    const n: number = bids.length;
+    let dealOrderList: Order[] = [];
 
-    if (bids.length <= 0) {
-      return;
+    for (let i = n - 1; i >= 0; i--) {
+      let bidOrder = bids[i];
+      let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
+      let remainOrderAmount: number = order.amount - order.filled_qty;
+
+      if (remainBidOrderAmount >= remainOrderAmount) {
+        order.filled_qty += remainOrderAmount;
+        order.executed_total = order.filled_qty * order.price;
+        bidOrder.filled_qty += remainOrderAmount;
+        bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
+
+        if (bidOrder.amount === bidOrder.filled_qty) {
+          bidOrder.status = OrderStatus.COMPLETED;
+          const [dealOrder] = bids.splice(i, 1);
+          dealOrderList.push(dealOrder);
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
+        } else {
+          bidOrder.status = OrderStatus.PARTIALLY;
+          const [dealOrder] = bids.slice(i, i + 1);
+          dealOrderList.push(dealOrder);
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
+        }
+
+        order.status = OrderStatus.COMPLETED;
+
+        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+        await updateOrderHistory(order, bidOrder);
+        return dealOrderList;
+      }
+
+      if (remainBidOrderAmount < remainOrderAmount) {
+        order.filled_qty += remainBidOrderAmount;
+        order.executed_total = order.filled_qty * order.price;
+        bidOrder.filled_qty += remainOrderAmount;
+        bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
+
+        const [dealOrder] = bids.splice(i, 1);
+        dealOrderList.push(dealOrder);
+        order.status = OrderStatus.PARTIALLY;
+        bidOrder.status = OrderStatus.COMPLETED;
+
+        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, order);
+        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
+
+        await updateOrderHistory(order, bidOrder);
+        continue;
+      }
     }
 
-    const dealOrder = bids.pop();
-    return dealOrder;
+    this.addBidOrder(order);
+    return dealOrderList;
   }
 
-  executeBidMarketOrder(order: Order): Order {
+  // NOTE: strongly needs to refactor
+  async executeBidMarketOrder(order: Order) {
     const { asks }: Market = this.getMarketByName(order.market);
+    const n: number = asks.length;
+    let dealOrderList: Order[] = [];
 
-    if (asks.length <= 0) {
-      return;
+    if (n !== 0 && asks[n - 1].price <= order.price) {
+      for (let i = n - 1; i >= 0; i--) {
+        let askOrder = asks[i];
+        let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
+        let remainOrderAmount: number = order.amount - order.filled_qty;
+
+        if (remainAskOrderAmount >= remainOrderAmount) {
+          order.filled_qty += remainOrderAmount;
+          order.executed_total = order.filled_qty * order.price;
+          askOrder.filled_qty += remainOrderAmount;
+          askOrder.executed_total = askOrder.filled_qty * askOrder.price;
+
+          if (askOrder.amount === askOrder.filled_qty) {
+            askOrder.status = OrderStatus.COMPLETED;
+            const [dealOrder] = asks.splice(i, 1);
+            dealOrderList.push(dealOrder);
+            await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+          } else {
+            askOrder.status = OrderStatus.PARTIALLY;
+            const [dealOrder] = asks.slice(i, i + 1);
+            dealOrderList.push(dealOrder)
+            await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, askOrder);
+          }
+
+          order.status = OrderStatus.COMPLETED;
+          await updateOrderHistory(order, askOrder);
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+
+          return dealOrderList;
+        }
+
+        if (remainAskOrderAmount < remainOrderAmount) {
+          order.filled_qty += remainAskOrderAmount;
+          order.executed_total = order.filled_qty * order.price;
+          askOrder.filled_qty += remainOrderAmount;
+          askOrder.executed_total = askOrder.filled_qty * askOrder.price;
+
+          const [dealOrder] = asks.splice(i, 1);
+          dealOrderList.push(dealOrder);
+          order.status = OrderStatus.PARTIALLY;
+          askOrder.status = OrderStatus.COMPLETED;
+
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, order);
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, askOrder);
+
+          await updateOrderHistory(order, askOrder);
+          continue;
+        }
+      }
     }
 
-    const dealOrder = asks.pop();
-    return dealOrder;
+    this.addBidOrder(order);
+    return dealOrderList;
   }
 
   async putLimit({
@@ -278,9 +375,9 @@ class OrderService {
       money,
       price,
       amount,
-      filledQty: 0,
+      filled_qty: 0,
       total: amount * price,
-      executedTotal: 0,
+      executed_total: 0,
       status: OrderStatus.ACTIVE,
       total_fee,
       deal_money: amount - total_fee,
@@ -348,38 +445,45 @@ class OrderService {
       money,
       status: OrderStatus.COMPLETED,
       amount,
-      filledQty: amount,
+      filled_qty: 0,
+      total: 0,
+      executed_total: 0,
       total_fee,
       deal_money: amount - total_fee,
-      deal_stock: amount - total_fee,
+      deal_stock: 0,
       create_time: getCurrentTimestamp(),
       update_time: 'infinity',
     };
 
-    let dealOrder: Order;
+    let dealOrderList: Order[];
     if (side === OrderSide.ASK) {
-      dealOrder = this.executeAskMarketOrder(order);
+      dealOrderList = await this.executeAskMarketOrder(order);
     } else {
-      dealOrder = this.executeBidMarketOrder(order);
+      dealOrderList = await this.executeBidMarketOrder(order);
     }
 
-    if (dealOrder) {
-      order.update_time = getCurrentTimestamp();
-      order.price = dealOrder.price;
-      const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
+    if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
+      for (const dealOrder of dealOrderList) {
+        order.update_time = getCurrentTimestamp();
+        order.price = dealOrder.price;
+        order.total = order.price * order.amount;
+        order.executed_total = order.price * order.filled_qty;
+        order.deal_stock = dealOrder.price;
+        const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
 
-      await kafkaProducer.pushMessage(
-        KafkaTopic.DEALS,
-        OrderEvent.FINISH,
-        firstDeal
-      );
+        await kafkaProducer.pushMessage(
+          KafkaTopic.DEALS,
+          OrderEvent.FINISH,
+          firstDeal
+        );
 
-      order.status = OrderStatus.COMPLETED;
-      dealOrder.status = OrderStatus.COMPLETED;
-      await updateOrderHistory(order, dealOrder);
-      await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+        order.status = OrderStatus.COMPLETED;
+        dealOrder.status = OrderStatus.COMPLETED;
+        await updateOrderHistory(order, dealOrder);
+        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
 
-      this.settleBookSize++;
+        this.settleBookSize++;
+      }
       return order;
     }
 
