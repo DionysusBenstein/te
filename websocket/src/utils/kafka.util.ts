@@ -19,6 +19,7 @@ export async function subscribeHelper(
       console.log(`Message ${channelString} :: ${key}`);
       ws.emit(channelString, JSON.stringify({
         stream: channelString,
+        market: params.market,
         data: self.query(params)
       }));
     }
