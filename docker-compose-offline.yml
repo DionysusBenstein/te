@@ -126,7 +126,7 @@ services:
       - ./router:/usr/src/router
       - /usr/src/router/node_modules
     ports:
-      - 3003:3003
+      - 5000:3003
     restart: always
     command:
       - /bin/bash
@@ -146,7 +146,7 @@ services:
       - ./websocket:/usr/src/websocket
       - /usr/src/websocket/node_modules
     ports:
-      - 3031:3031
+      - 5050:3031
     restart: always
     command:
       - /bin/bash
