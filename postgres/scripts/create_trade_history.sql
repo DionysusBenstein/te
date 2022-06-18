@@ -10,16 +10,16 @@ CREATE TABLE order_history (
     "status"         VARCHAR(9) NOT NULL,
     "price"          DECIMAL(30,8) NOT NULL,
     "amount"         DECIMAL(30,8) NOT NULL,
-    "filled_qty"      DECIMAL(30,8) NOT NULL,
+    "filled_qty"     DECIMAL(30,8),
     "total"          DECIMAL(30,8) NOT NULL,
-    "executed_total"  DECIMAL(30,8) NOT NULL,
+    "executed_total" DECIMAL(30,8),
 
-    "total_fee"       DECIMAL(30,4) NOT NULL,
-    "deal_money"      DECIMAL(30,16) NOT NULL,
-    "deal_stock"      DECIMAL(30,8) NOT NULL,
+    "total_fee"      DECIMAL(30,4) NOT NULL,
+    "deal_money"     DECIMAL(30,16) NOT NULL,
+    "deal_stock"     DECIMAL(30,8) NOT NULL,
 
-    "create_time"     TIMESTAMP NOT NULL,
-    "update_time"     TIMESTAMP NOT NULL
+    "create_time"    TIMESTAMP NOT NULL,
+    "update_time"    TIMESTAMP NOT NULL
 );
 
 CREATE TABLE deal_history (

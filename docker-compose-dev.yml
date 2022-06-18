@@ -2,45 +2,41 @@ version: "3.9"
 
 services:
   zookeeper:
-    container_name: zookeeper
     image: zookeeper
     hostname: zookeeper
     ports:
-      - 32181:2181
+      - 12181:2181
 
   kafka:
     image: confluentinc/cp-kafka:5.4.0
-    container_name: kafka
     hostname: kafka
     ports:
-      - 39092:39092
+      - 19092:19092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:39092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:39092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:19092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   redis:
     image: redis
-    container_name: redis
     hostname: redis
     restart: unless-stopped
     volumes:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis.conf
     ports:
-      - 36379:6379
+      - 16379:6379
     command: redis-server /usr/local/etc/redis.conf
       
   postgres:
-    container_name: postgres
     hostname: postgres
     image: postgres
     ports:
-      - 35432:5432
+      - 15432:5432
     volumes:
       - ./postgres/scripts:/docker-entrypoint-initdb.d
       - ./postgres/pgdata:/var/lib/postgresql/pgdata
@@ -51,7 +47,6 @@ services:
       PGDATA: /var/lib/postgresql/pgdata
 
   marketprice:
-    container_name: marketprice
     build: ./marketprice
     environment:
       - NODE_ENV=development
@@ -61,7 +56,7 @@ services:
       - ./marketprice:/usr/src/marketprice
       - /usr/src/marketprice/node_modules
     ports:
-      - 3000:3000
+      - 1000:3000
     depends_on:
       - zookeeper
       - kafka
@@ -69,7 +64,6 @@ services:
     command: npm run dev
 
   matchengine:
-    container_name: matchengine
     build: ./matchengine
     environment:
       - NODE_ENV=development
@@ -79,14 +73,13 @@ services:
       - ./matchengine:/usr/src/matchengine
       - /usr/src/matchengine/node_modules
     ports:
-      - 3001:3001
+      - 1001:3001
     depends_on:
       - kafka
     restart: always
     command: npm run dev
 
   readhistory:
-    container_name: readhistory
     build: ./readhistory
     environment:
       - NODE_ENV=development
@@ -96,12 +89,11 @@ services:
       - ./readhistory:/usr/src/readhistory
       - /usr/src/readhistory/node_modules
     ports:
-      - 3002:3002
+      - 1002:3002
     restart: always
     command: npm run dev
 
   router:
-    container_name: router
     build: ./router
     environment:
       - NODE_ENV=development
@@ -111,12 +103,11 @@ services:
       - ./router:/usr/src/router
       - /usr/src/router/node_modules
     ports:
-      - 3003:3003
+      - 1003:3003
     restart: always
     command: npm run dev
 
   websocket:
-    container_name: websocket
     build: ./websocket
     environment:
       - NODE_ENV=development
@@ -126,7 +117,7 @@ services:
       - ./websocket:/usr/src/websocket
       - /usr/src/websocket/node_modules
     ports:
-      - 3041:3031
+      - 1041:3031
     restart: always
     command: npm run dev
 
