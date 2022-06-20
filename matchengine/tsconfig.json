@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "lib": ["ES2015", "dom"],
     "esModuleInterop": true,
     "outDir": "dist",
     "baseUrl": ".",

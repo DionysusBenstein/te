@@ -21,7 +21,6 @@ export class MarketService {
   constructor(private client: typeof redisClient) {
     kafkaConsumer.subscribe(KafkaTopic.DEALS, onDealMessage);
     kafkaConsumer.subscribe(KafkaTopic.ORDERS, onOrderMessage);
-
   }
 
   async getLast({ market }: MarketLastParams) {
@@ -125,7 +124,8 @@ export class MarketService {
     const marketList: any = deasyncRequestHelper('market.list', {}, client);
     return Promise.all(marketList.map(async (market: any) => {
       const status: any = await this.getStatusToday({ market: market.name });
-      const usdPriceQueryResult: any = await sequelize.query('SELECT usdPrice from LivePrice WHERE currencyName = :market', {
+      const usdPriceQueryResult: any = await sequelize.query(
+        'SELECT usdPrice from LivePrice WHERE currencyName = :market', {
         replacements: {
           market: market.money
         },

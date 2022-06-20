@@ -31,6 +31,5 @@ export async function orderbookUpdate(event, order: any) {
 
 export async function onOrderMessage(result) {
     let { value: order, key } = result.message;
-
     await orderbookUpdate(key.toString(), JSON.parse(order));
 }

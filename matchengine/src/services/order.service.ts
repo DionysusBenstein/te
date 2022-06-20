@@ -1,6 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import PromiseBlue from 'bluebird';
-
 import config from '../config/matchengine.config';
 import db from '../database/queries';
 import { getCurrentTimestamp } from '../utils/time.util';
@@ -42,29 +40,34 @@ class OrderService {
       const asks = [];
       const bids = [];
 
-      PromiseBlue.props({
-        askIds: redisClient.lRange(`${name}:asks`, 0, -1),
-        bidIds: redisClient.lRange(`${name}:bids`, 0, -1)
-      }).then(async response => {
-        for (const id of response.askIds) {
-          asks.push(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
-        }
+      const market: Market = {
+        name,
+        stock,
+        money,
+        asks,
+        bids,
+      };
 
-        for (const id of response.bidIds) {
-          bids.push(JSON.parse(await redisClient.get(`${name}:bids:${id}`)));
-        }
-
-        const market: Market = {
-          name,
-          stock,
-          money,
-          asks,
-          bids,
-        };
-
-        this.marketList.push(market);
-      }).catch(console.log);
+      this.marketList.push(market);
     }
+  }
+
+  async initOrderBook() {
+    for (const market of this.marketList) {
+      const { name } = market;
+      const askIds = await redisClient.lRange(`${name}:asks`, 0, -1)
+      const bidIds = await redisClient.lRange(`${name}:bids`, 0, -1)
+
+      for (const id of askIds) {
+        this.addAskOrder(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
+      }
+
+      for (const id of bidIds) {
+        this.addBidOrder(JSON.parse(await redisClient.get(`${name}:bids:${id}`)));
+      }
+    }
+
+    return this;
   }
 
   getMarketByName(marketName: string): Market {
@@ -172,6 +175,7 @@ class OrderService {
     let dealOrderList: Order[] = [];
 
     if (n !== 0 && asks[n - 1].price <= order.price) {
+
       for (let i = n - 1; i >= 0; i--) {
         let askOrder = asks[i];
 

@@ -7,9 +7,18 @@ import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 import { validateAndConvert } from '../utils/validation.util';
 import { Order } from '../typings/types';
-import orderService from '../services/order.service';
+import plainOrderService from '../services/order.service';
 
 class OrderController {
+  private orderService: any
+
+  constructor() {
+    const self = this;
+    plainOrderService.initOrderBook().then(response => {
+      self.orderService = response;
+    })
+  }
+
   async putLimit(params: PutLimitParams) {
     const { data, errors } = await validateAndConvert(PutLimitParams, params);
 
@@ -20,7 +29,7 @@ class OrderController {
       };
     }
 
-    const order: Order = await orderService.putLimit(data);
+    const order: Order = await this.orderService.putLimit(data);
 
     return {
       status: 'ok',
@@ -38,7 +47,7 @@ class OrderController {
       };
     }
 
-    const order: any = await orderService.putMarket(data);
+    const order: any = await this.orderService.putMarket(data);
 
     return {
       status: 'ok',
@@ -56,7 +65,7 @@ class OrderController {
       };
     }
 
-    return await orderService.cancel(data);
+    return await this.orderService.cancel(data);
   }
 
   async depth(params: DepthParams) {
@@ -69,7 +78,7 @@ class OrderController {
       };
     }
 
-    return await orderService.depth(data);
+    return await this.orderService.depth(data);
   }
 
   async book(params: OrderBookParams) {
@@ -82,7 +91,7 @@ class OrderController {
       };
     }
 
-    const { total, records } = orderService.book(data);
+    const { total, records } = this.orderService.book(data);
 
     return {
       offset: params.offset,
@@ -102,7 +111,7 @@ class OrderController {
       };
     }
 
-    const { total, records } = orderService.pending(data);
+    const { total, records } = this.orderService.pending(data);
 
     return {
       offset: params.offset,
@@ -122,7 +131,7 @@ class OrderController {
       };
     }
 
-    return orderService.pending_detail(data);
+    return this.orderService.pending_detail(data);
   }
 }
 
