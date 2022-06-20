@@ -17,7 +17,7 @@ class KlineController implements IWsRpcController {
   async subscribe(params: any, ws: any) {
     const options: SubOptions = {
       topics: [ KafkaTopic.DEALS ],
-      event: SocketEvent.MARKET
+      event: SocketEvent.KLINE
     };
 
     return await subscribeHelper.call(this, Method.MARKET_KLINE, params, ws, options);

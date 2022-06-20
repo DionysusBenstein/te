@@ -25,7 +25,7 @@ export enum KafkaTopic {
 export enum SocketEvent {
   DEPTH = 'depth',
   BOOK = 'book',
-  MARKET = 'market',
+  KLINE = 'kline',
   PRICE = 'price',
   STATE = 'state',
   TODAY = 'today',
