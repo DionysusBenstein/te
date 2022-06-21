@@ -19,7 +19,7 @@ export class OrderHistoryParams {
 
   @Expose()
   @IsString()
-  @IsNotEmpty
+  @IsNotEmpty()
   market: string;
 
   @Expose()
