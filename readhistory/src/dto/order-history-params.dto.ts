@@ -7,6 +7,7 @@ import {
   IsUUID,
   IsIn,
   Min,
+  IsOptional
 } from 'class-validator';
 
 export class OrderHistoryParams {
@@ -18,7 +19,7 @@ export class OrderHistoryParams {
 
   @Expose()
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty
   market: string;
 
   @Expose()
@@ -30,4 +31,22 @@ export class OrderHistoryParams {
   @IsPositive()
   @IsInt()
   limit: number;
+}
+
+export class OrderHistoryReportParams {
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  @IsUUID('4')
+  user_id: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  date_start: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  date_end: string;
 }

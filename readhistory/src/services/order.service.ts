@@ -4,7 +4,7 @@ import { pool } from "../config/database.config";
 import { FinishedDetailParams } from "../dto/finished-detail-params.dto";
 import { OrderDealsParams } from "../dto/order-deals-params.dto";
 import { OrderFinishedParams } from "../dto/order-finished-params.dto";
-import { OrderHistoryParams } from '../dto/order-history-params.dto';
+import { OrderHistoryParams, OrderHistoryReportParams } from '../dto/order-history-params.dto';
 import { DealHistory } from "../typings/types/deal-history.return-type";
 import { OrderDetail } from "../typings/types/order-detail.return-type";
 import { OrderHistory } from "../typings/types/order-history.return-type";
@@ -87,8 +87,8 @@ export class OrderService {
               SELECT * FROM order_history
               WHERE ${fieldMatch(params)}
               ORDER BY create_time DESC
-              OFFSET ${offset}
-              LIMIT ${limit}
+              OFFSET ${offset || 0}
+              ${limit ? 'LIMIT ' + limit : ''}
           ) AS t) AS rows 
       `;
 
@@ -97,6 +97,31 @@ export class OrderService {
       return {
         records: rows[0].rows,
         total: parseInt(rows[0].count)
+      };
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  async getOrderHistoryReport(params: OrderHistoryReportParams) {
+    const dateStart = new Date(params.date_start || 0).toISOString();
+    const dateEnd = new Date(params.date_end || Date.now()).toISOString();
+
+    try {
+      const queryString = `
+        SELECT * FROM order_history
+        WHERE
+          user_id = '${params.user_id}' AND
+          create_time >= '${dateStart}' AND
+          create_time <= '${dateEnd}'
+        ORDER BY create_time DESC
+      `;
+
+      const { rows } = await pool.query(queryString);
+
+      return {
+        records: rows,
       };
     } catch (err) {
       console.log(err);
