@@ -87,8 +87,8 @@ export class OrderService {
               SELECT * FROM order_history
               WHERE ${fieldMatch(params)}
               ORDER BY create_time DESC
-              OFFSET ${offset || 0}
-              ${limit ? 'LIMIT ' + limit : ''}
+              OFFSET ${offset}
+              LIMIT ${limit}
           ) AS t) AS rows 
       `;
 

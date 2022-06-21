@@ -66,7 +66,6 @@ export class OrderController {
       params
     );
 
-    console.log(data)
     if (errors) {
       return {
         errors,
