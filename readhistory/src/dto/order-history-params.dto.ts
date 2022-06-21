@@ -18,18 +18,16 @@ export class OrderHistoryParams {
   user_id: string;
 
   @Expose()
-  @IsOptional()
   @IsString()
+  @IsNotEmpty
   market: string;
 
   @Expose()
-  @IsOptional()
   @IsInt()
   @Min(0)
   offset: number;
 
   @Expose()
-  @IsOptional()
   @IsPositive()
   @IsInt()
   limit: number;
