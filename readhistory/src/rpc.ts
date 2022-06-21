@@ -6,7 +6,7 @@ import { FinishedDetailParams } from "./dto/finished-detail-params.dto";
 import { MarketUserDealsParams } from "./dto/market-user-deals-params.dto";
 import { OrderDealsParams } from "./dto/order-deals-params.dto";
 import { OrderFinishedParams } from "./dto/order-finished-params.dto";
-import { OrderHistoryParams } from './dto/order-history-params.dto';
+import { OrderHistoryParams, OrderHistoryReportParams } from './dto/order-history-params.dto';
 
 export const methods = {
   balance: {
@@ -30,6 +30,9 @@ export const methods = {
 
     async history(args: OrderHistoryParams, callback) {
       callback(null, await orderController.history(args));
+    },
+    async history_report(args: OrderHistoryReportParams, callback) {
+      callback(null, await orderController.historyReport(args));
     },
   },
 

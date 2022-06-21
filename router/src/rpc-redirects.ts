@@ -21,6 +21,7 @@ export const redirects = {
     pending: redirect(services.matchengine),
     pending_detail: redirect(services.matchengine),
     history: redirect(services.readhistory),
+    history_report: redirect(services.readhistory),
     finished: redirect(services.readhistory),
     finished_detail: redirect(services.readhistory),
     // temp
