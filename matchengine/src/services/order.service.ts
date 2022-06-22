@@ -246,6 +246,10 @@ class OrderService {
       let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
       let remainOrderAmount: number = order.amount - order.filled_qty;
 
+      order.price = (order.price + bidOrder.price) / (n - i);
+      order.total = order.amount * order.price;
+      console.log(order.price, order.total);
+
       if (remainBidOrderAmount >= remainOrderAmount) {
         order.filled_qty += remainOrderAmount;
         order.executed_total = order.filled_qty * order.price;
@@ -305,6 +309,10 @@ class OrderService {
       let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
       let remainOrderAmount: number = order.amount - order.filled_qty;
 
+      order.price = (order.price + askOrder.price) / (n - i);
+      order.total = order.amount * order.price;
+
+      console.log(order.price, order.total);
       if (remainAskOrderAmount >= remainOrderAmount) {
         order.filled_qty += remainOrderAmount;
         order.executed_total = order.filled_qty * order.price;
