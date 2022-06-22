@@ -246,13 +246,9 @@ class OrderService {
       let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
       let remainOrderAmount: number = order.amount - order.filled_qty;
 
-      order.price = (order.price + bidOrder.price) / (n - i);
-      order.total = order.amount * order.price;
-      console.log(order.price, order.total);
-
       if (remainBidOrderAmount >= remainOrderAmount) {
         order.filled_qty += remainOrderAmount;
-        order.executed_total = order.filled_qty * order.price;
+        // order.executed_total = order.filled_qty * order.price;
         bidOrder.filled_qty += remainOrderAmount;
         bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
@@ -277,7 +273,7 @@ class OrderService {
 
       if (remainBidOrderAmount < remainOrderAmount) {
         order.filled_qty += remainBidOrderAmount;
-        order.executed_total = order.filled_qty * order.price;
+        // order.executed_total = order.filled_qty * order.price;
         bidOrder.filled_qty += remainOrderAmount;
         bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
@@ -309,13 +305,9 @@ class OrderService {
       let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
       let remainOrderAmount: number = order.amount - order.filled_qty;
 
-      order.price = (order.price + askOrder.price) / (n - i);
-      order.total = order.amount * order.price;
-
-      console.log(order.price, order.total);
       if (remainAskOrderAmount >= remainOrderAmount) {
         order.filled_qty += remainOrderAmount;
-        order.executed_total = order.filled_qty * order.price;
+        // order.executed_total = order.filled_qty * order.price;
         askOrder.filled_qty += remainOrderAmount;
         askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
@@ -340,7 +332,7 @@ class OrderService {
 
       if (remainAskOrderAmount < remainOrderAmount) {
         order.filled_qty += remainAskOrderAmount;
-        order.executed_total = order.filled_qty * order.price;
+        // order.executed_total = order.filled_qty * order.price;
         askOrder.filled_qty += remainOrderAmount;
         askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
@@ -476,9 +468,12 @@ class OrderService {
     }
 
     if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
-      for (const dealOrder of dealOrderList) {
+      const n = dealOrderList.length;
+      
+      for (let i = 0; i < n; i++) {
+        const dealOrder = dealOrderList[i];
         order.update_time = getCurrentTimestamp();
-        order.price = dealOrder.price;
+        order.price = (order.price + dealOrder.price) / (i + 1);
         order.total = order.price * order.amount;
         order.executed_total = order.price * order.filled_qty;
         order.deal_stock = dealOrder.price;

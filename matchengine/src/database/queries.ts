@@ -170,7 +170,6 @@ class Queries {
   }
 
   async updateMarketOrder(order: Order, updateTime: string): Promise<Order[]> {
-    console.log(order)
     try {
       const queryString: string = `
         UPDATE "order_history"
