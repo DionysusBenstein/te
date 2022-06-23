@@ -169,6 +169,29 @@ class Queries {
     }
   }
 
+  async updateMarketOrder(order: Order, updateTime: string): Promise<Order[]> {
+    try {
+      const queryString: string = `
+        UPDATE "order_history"
+        SET
+          status = '${order.status}',
+          price = '${order.price}',
+          total = '${order.total}',
+          filled_qty = '${order.filled_qty}',
+          executed_total = '${order.executed_total}',
+          update_time = '${updateTime}'
+        WHERE id = '${order.id}'
+      ;`;
+
+      const response: QueryResult = await pool.query(queryString);
+
+      return response;
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
   async getBalanceHistory(
     user_id: string,
     assets: string[]

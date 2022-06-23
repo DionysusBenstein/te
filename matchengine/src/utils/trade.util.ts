@@ -26,7 +26,7 @@ export async function updateOrderHistory(
   dealOrder: Order
 ): Promise<void> {  
   const updateTime = getCurrentTimestamp();
-  await db.updateOrder(order, updateTime);
+  await (order.type === 'limit' ? db.updateOrder(order, updateTime) : db.updateMarketOrder(order, updateTime));
   await db.updateOrder(dealOrder, updateTime);
 }
 

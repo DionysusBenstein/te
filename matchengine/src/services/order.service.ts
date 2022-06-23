@@ -248,7 +248,6 @@ class OrderService {
 
       if (remainBidOrderAmount >= remainOrderAmount) {
         order.filled_qty += remainOrderAmount;
-        order.executed_total = order.filled_qty * order.price;
         bidOrder.filled_qty += remainOrderAmount;
         bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
@@ -273,7 +272,6 @@ class OrderService {
 
       if (remainBidOrderAmount < remainOrderAmount) {
         order.filled_qty += remainBidOrderAmount;
-        order.executed_total = order.filled_qty * order.price;
         bidOrder.filled_qty += remainOrderAmount;
         bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
@@ -307,7 +305,6 @@ class OrderService {
 
       if (remainAskOrderAmount >= remainOrderAmount) {
         order.filled_qty += remainOrderAmount;
-        order.executed_total = order.filled_qty * order.price;
         askOrder.filled_qty += remainOrderAmount;
         askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
@@ -332,7 +329,6 @@ class OrderService {
 
       if (remainAskOrderAmount < remainOrderAmount) {
         order.filled_qty += remainAskOrderAmount;
-        order.executed_total = order.filled_qty * order.price;
         askOrder.filled_qty += remainOrderAmount;
         askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
@@ -468,9 +464,10 @@ class OrderService {
     }
 
     if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
-      for (const dealOrder of dealOrderList) {
+      for (let i = 0; i < dealOrderList.length; i++) {
+        const dealOrder = dealOrderList[i];
         order.update_time = getCurrentTimestamp();
-        order.price = dealOrder.price;
+        order.price = (order.price + dealOrder.price) / (i + 1);
         order.total = order.price * order.amount;
         order.executed_total = order.price * order.filled_qty;
         order.deal_stock = dealOrder.price;
