@@ -500,7 +500,9 @@ class OrderService {
 
     if (orderIndex >= 0) {
       const [order] = asks.splice(orderIndex, 1);
-      order.status = OrderStatus.CANCELED;
+      console.log('PART CANC', order);
+
+      order.status = order.filled_qty > 0 ? OrderStatus.PARTIALLY_CANCELED : OrderStatus.CANCELED;
       db.updateOrder(order, getCurrentTimestamp());
       await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL);
       return order;
@@ -514,7 +516,9 @@ class OrderService {
     }
 
     const [order] = bids.splice(orderIndex, 1);
-    order.status = OrderStatus.CANCELED;
+    console.log('PART CANC', order);
+
+    order.status = order.filled_qty > 0 ? OrderStatus.PARTIALLY_CANCELED : OrderStatus.CANCELED;
     db.updateOrder(order, getCurrentTimestamp());
     await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL, order);
     return order;

@@ -9,7 +9,7 @@ CREATE TABLE order_history (
     "market"         VARCHAR(7) NOT NULL,
     "stock"          VARCHAR(4),
     "money"          VARCHAR(4),
-    "status"         VARCHAR(9) NOT NULL,
+    "status"         VARCHAR(20) NOT NULL,
     "price"          DECIMAL(30,8) NOT NULL,
     "amount"         DECIMAL(30,8) NOT NULL,
     "filled_qty"     DECIMAL(30,8),

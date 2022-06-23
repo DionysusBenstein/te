@@ -19,6 +19,7 @@ export enum OrderStatus {
   COMPLETED = 'completed',
   PARTIALLY = 'partially',
   CANCELED = 'canceled',
+  PARTIALLY_CANCELED = 'partially canceled'
 }
 
 export enum BalanceType {
