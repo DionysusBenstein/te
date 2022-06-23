@@ -8,8 +8,9 @@ export type Deal = {
 };
 
 export type MarketStatus = {
-  period: number;
+  period?: number;
   open: number;
+  prev: number;
   last: number;
   high: number;
   low: number;

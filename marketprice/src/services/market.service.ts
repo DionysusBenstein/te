@@ -45,9 +45,16 @@ export class MarketService {
   async getStatus({ period, market }: MarketStatusParams) {
     const { timeframes } = config;
     const klineData = await this.client.hGetAll(`k:${market}:1`);
-    const [lastDeal] = await this.client.lRange(`${market}:deals`, 0, 0);
+    let [lastDeal, prevDeal] = await this.client.lRange(`${market}:deals`, 0, 1);
+
     if (!lastDeal) return null;
+
+    if (!prevDeal) {
+      prevDeal = lastDeal;
+    }
+
     const { price } = JSON.parse(lastDeal);
+    const { price: prevPrice } = JSON.parse(prevDeal);
 
     const end = Date.now() / 1000;
     const start = end - period;
@@ -55,7 +62,6 @@ export class MarketService {
 
     for (let time of Object.keys(klineData)) {
       const intTime = parseInt(time);
-
       const timeframeStart = Math.floor(start / timeframes['1']);
       const timeframeEnd = Math.floor(end / timeframes['1']);
 
@@ -69,6 +75,7 @@ export class MarketService {
 
     const status: MarketStatus = {
       period,
+      prev: prevPrice,
       last: price,
       ...singleKline,
     };
@@ -80,17 +87,20 @@ export class MarketService {
     const status: MarketStatus = await this.getStatus({ market, period: 86400 });
 
     if (!status) {
-      return {
+      const defaultStatus: MarketStatus = {
         open: 0,
+        prev: 0,
         last: 0,
         high: 0,
         low: 0,
         volume: 0
-      };
+      }
+      return defaultStatus;
     }
 
     status.period = undefined;
     return status;
+
   }
 
   async getKline({ market, start, end, interval, offset, limit }: KlineParams) {
@@ -122,6 +132,7 @@ export class MarketService {
 
   async summary() {
     const marketList: any = deasyncRequestHelper('market.list', {}, client);
+
     return Promise.all(marketList.map(async (market: any) => {
       const status: any = await this.getStatusToday({ market: market.name });
       const usdPriceQueryResult: any = await sequelize.query(
@@ -136,13 +147,15 @@ export class MarketService {
 
       const usdPrice: number = (usdPriceQueryResult || MSSERVER_MISSING_CURRENCY).usdPrice;
       const percentChange: number = -(100 - status.close / status.open * 100).toFixed(3) || 0;
-      const change: number = status.close - status.open || 0;
-      const colour: string = change >= 0 ? 'green' : 'red';
+      const change24h: number = status.close - status.open || 0;
+      const change: number = status.last - status.prev || 0;
+      const colour: string = change > 0 ? 'green' : change < 0 ? 'red' : 'white';
 
       return {
         pairId: market.pairId,
         pairName: `${market.stock}-${market.money}`,
         percentChange,
+        change24h,
         change,
         colour,
         price: status.last,
