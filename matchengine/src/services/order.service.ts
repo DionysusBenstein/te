@@ -383,7 +383,7 @@ class OrderService {
       status: OrderStatus.ACTIVE,
       total_fee,
       deal_money: amount - total_fee,
-      deal_stock: amount / price - total_fee,
+      deal_stock: amount / pricePrec - total_fee,
       create_time: getCurrentTimestamp(),
       update_time: 'infinity',
     };
