@@ -26,7 +26,7 @@ import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 
 import redisClient from '../config/database.config';
-import { getAssetConfigByName } from 'src/utils/config.util';
+import { getAssetConfigByName } from '../utils/config.util';
 
 class OrderService {
   marketList: Market[] = [];
