@@ -362,7 +362,7 @@ class OrderService {
     amount,
     total_fee,
   }: PutLimitParams): Promise<Order> {
-    const precision = (10 ** getAssetConfigByName(money).prec);
+    const precision = 10 ** getAssetConfigByName(money).prec;
     const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
 
     const order: Order = {
@@ -435,7 +435,7 @@ class OrderService {
     amount,
     total_fee,
   }: PutMarketParams) {
-    const precision = (10 ** getAssetConfigByName(money).prec);
+    const precision = 10 ** getAssetConfigByName(money).prec;
 
     const order: Order = {
       id: uuidv4(),
