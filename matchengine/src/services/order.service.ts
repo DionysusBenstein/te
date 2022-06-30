@@ -424,6 +424,26 @@ class OrderService {
     return order;
   }
 
+  checkLiquid({ amount, side, market }) {
+    let matchOrders;
+
+    if (side === OrderSide.ASK) {
+      matchOrders = this.getMarketByName(market).bids;
+    } else {
+      matchOrders = this.getMarketByName(market).asks;
+    }
+
+    for (const matchOrder of matchOrders) {
+      amount -= matchOrder.amount - matchOrder.filled_qty;
+
+      if (amount <= 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   async putMarket({
     user_id,
     exchange_id,
@@ -459,6 +479,10 @@ class OrderService {
       create_time: getCurrentTimestamp(),
       update_time: 'infinity',
     };
+
+    if (!this.checkLiquid(order)) {
+      return { message: 'There are not anought orders!' };
+    }
 
     await db.appendOrderHistory(order);
 
