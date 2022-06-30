@@ -26,6 +26,7 @@ import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 
 import redisClient from '../config/database.config';
+import { getAssetConfigByName } from '../utils/config.util';
 
 class OrderService {
   marketList: Market[] = [];
@@ -361,6 +362,9 @@ class OrderService {
     amount,
     total_fee,
   }: PutLimitParams): Promise<Order> {
+    const precision = 10 ** getAssetConfigByName(money).prec;
+    const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
     const order: Order = {
       id: uuidv4(),
       exchange_id,
@@ -371,15 +375,15 @@ class OrderService {
       market,
       stock,
       money,
-      price,
+      price: pricePrec,
       amount,
       filled_qty: 0,
-      total: amount * price,
+      total: amount * pricePrec,
       executed_total: 0,
       status: OrderStatus.ACTIVE,
       total_fee,
       deal_money: amount - total_fee,
-      deal_stock: amount / price - total_fee,
+      deal_stock: amount / pricePrec - total_fee,
       create_time: getCurrentTimestamp(),
       update_time: 'infinity',
     };
@@ -431,6 +435,8 @@ class OrderService {
     amount,
     total_fee,
   }: PutMarketParams) {
+    const precision = 10 ** getAssetConfigByName(money).prec;
+
     const order: Order = {
       id: uuidv4(),
       exchange_id,
@@ -467,7 +473,11 @@ class OrderService {
       for (let i = 0; i < dealOrderList.length; i++) {
         const dealOrder = dealOrderList[i];
         order.update_time = getCurrentTimestamp();
-        order.price = (order.price + dealOrder.price) / (i + 1);
+
+        const price = (order.price + dealOrder.price) / (i + 1);
+        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+        
+        order.price = pricePrec;
         order.total = order.price * order.amount;
         order.executed_total = order.price * order.filled_qty;
         order.deal_stock = dealOrder.price;
