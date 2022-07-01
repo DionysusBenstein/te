@@ -75,6 +75,17 @@ class OrderService {
     return this.marketList.find((market) => market.name === marketName);
   }
 
+  isEnoughtLiquidity({ amount, side, market }: Order) {
+    const orders: Order[] = this.getMarketByName(market)[side === OrderSide.ASK ? 'bids' : 'asks'].reverse();
+ 
+    let i: number = orders.length;
+    while (amount > 0 && --i >= 0) {
+      amount -= orders[i].amount - orders[i].filled_qty;
+    }
+
+    return amount <= 0;
+  }
+
   addAskOrder(order: Order) {
     const { asks }: Market = this.getMarketByName(order.market);
     asks.push(order);
@@ -242,13 +253,20 @@ class OrderService {
     const n: number = bids.length;
     let dealOrderList: Order[] = [];
 
+    const precision = 10 ** getAssetConfigByName(order.money).prec;
+
     for (let i = n - 1; i >= 0; i--) {
       let bidOrder = bids[i];
       let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
       let remainOrderAmount: number = order.amount - order.filled_qty;
 
       if (remainBidOrderAmount >= remainOrderAmount) {
+        const price = remainOrderAmount * bidOrder.price / order.amount;
+        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+        order.price += pricePrec;
         order.filled_qty += remainOrderAmount;
+        order.executed_total = order.price * order.filled_qty;
         bidOrder.filled_qty += remainOrderAmount;
         bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
@@ -268,11 +286,16 @@ class OrderService {
 
         await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
         await updateOrderHistory(order, bidOrder);
-        return dealOrderList;
+        return { dealOrderList, order };
       }
 
       if (remainBidOrderAmount < remainOrderAmount) {
+        const price = remainBidOrderAmount * bidOrder.price / order.amount;
+        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+        order.price += pricePrec;
         order.filled_qty += remainBidOrderAmount;
+        order.executed_total = order.price * order.filled_qty;
         bidOrder.filled_qty += remainOrderAmount;
         bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
@@ -290,7 +313,7 @@ class OrderService {
     }
 
     this.addAskOrder(order);
-    return dealOrderList;
+    return { dealOrderList, order };
   }
 
   // NOTE: strongly needs to refactor
@@ -299,13 +322,20 @@ class OrderService {
     const n: number = asks.length;
     let dealOrderList: Order[] = [];
 
+    const precision = 10 ** getAssetConfigByName(order.money).prec;
+
     for (let i = n - 1; i >= 0; i--) {
       let askOrder = asks[i];
       let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
       let remainOrderAmount: number = order.amount - order.filled_qty;
 
       if (remainAskOrderAmount >= remainOrderAmount) {
+        const price = remainOrderAmount * askOrder.price / order.amount;
+        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+        order.price += pricePrec;
         order.filled_qty += remainOrderAmount;
+        order.executed_total = order.price * order.filled_qty;
         askOrder.filled_qty += remainOrderAmount;
         askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
@@ -325,11 +355,16 @@ class OrderService {
         await updateOrderHistory(order, askOrder);
         await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
 
-        return dealOrderList;
+        return { dealOrderList, order };
       }
 
       if (remainAskOrderAmount < remainOrderAmount) {
+        const price = remainAskOrderAmount * askOrder.price / order.amount;
+        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+        order.price += pricePrec;
         order.filled_qty += remainAskOrderAmount;
+        order.executed_total = order.price * order.filled_qty;
         askOrder.filled_qty += remainOrderAmount;
         askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
@@ -347,7 +382,7 @@ class OrderService {
     }
 
     this.addBidOrder(order);
-    return dealOrderList;
+    return { dealOrderList, order };
   }
 
   async putLimit({
@@ -424,26 +459,6 @@ class OrderService {
     return order;
   }
 
-  checkLiquid({ amount, side, market }) {
-    let matchOrders;
-
-    if (side === OrderSide.ASK) {
-      matchOrders = this.getMarketByName(market).bids;
-    } else {
-      matchOrders = this.getMarketByName(market).asks;
-    }
-
-    for (const matchOrder of matchOrders) {
-      amount -= matchOrder.amount - matchOrder.filled_qty;
-
-      if (amount <= 0) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   async putMarket({
     user_id,
     exchange_id,
@@ -455,8 +470,6 @@ class OrderService {
     amount,
     total_fee,
   }: PutMarketParams) {
-    const precision = 10 ** getAssetConfigByName(money).prec;
-
     const order: Order = {
       id: uuidv4(),
       exchange_id,
@@ -480,30 +493,33 @@ class OrderService {
       update_time: 'infinity',
     };
 
-    if (!this.checkLiquid(order)) {
-      return { message: 'There are not anought orders!' };
+    if (!this.isEnoughtLiquidity(order)) {
+      return { message: 'There are not enought liquidity!' };
     }
 
     await db.appendOrderHistory(order);
 
-    let dealOrderList: Order[];
+    let executedResult: { dealOrderList: Order[], order: Order };
+    
     if (side === OrderSide.ASK) {
-      dealOrderList = await this.executeAskMarketOrder(order);
+      executedResult = await this.executeAskMarketOrder(order);
     } else {
-      dealOrderList = await this.executeBidMarketOrder(order);
+      executedResult = await this.executeBidMarketOrder(order);
     }
 
+    const { dealOrderList, order: executedOrder } = executedResult;
+
     if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
+      order.price = executedOrder.price;
+      order.total = executedOrder.total;
+      order.executed_total = executedOrder.executed_total;
+      order.filled_qty = executedOrder.filled_qty;
+      order.status = executedOrder.status;
+
       for (let i = 0; i < dealOrderList.length; i++) {
         const dealOrder = dealOrderList[i];
         order.update_time = getCurrentTimestamp();
-
-        const price = (order.price + dealOrder.price) / (i + 1);
-        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
         
-        order.price = pricePrec;
-        order.total = order.price * order.amount;
-        order.executed_total = order.price * order.filled_qty;
         order.deal_stock = dealOrder.price;
         const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
 
