@@ -15,8 +15,6 @@ const port = process.env.PORT || 3001;
 
 app.use(express.json());
 
-kafkaProducer.connect();
-
 const map = _.reduce(methods, collapse('', '.'), {});
 
 app.post('/', new jayson.Server(map).middleware());
@@ -25,6 +23,7 @@ app.get('/', (req, res) => {
 });
 
 const start = async () => {
+  await kafkaProducer.connect();
   app.listen(port, () => console.log(`Running on port ${port}`));
 };
 

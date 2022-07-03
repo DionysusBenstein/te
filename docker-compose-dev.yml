@@ -2,21 +2,21 @@ version: "3.9"
 
 services:
   zookeeper:
-    image: zookeeper
+    image: confluentinc/cp-zookeeper:latest
     hostname: zookeeper
-    ports:
-      - ${ZOOKEEPER_PORT}:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
 
   kafka:
     image: confluentinc/cp-kafka:5.4.0
     hostname: kafka
     ports:
-      - ${KAFKA_PORT}:19092
+      - ${EXPOSED_KAFKA_PORT}:${EXPOSED_KAFKA_PORT}
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:19092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:19092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:${EXPOSED_KAFKA_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${EXPOSED_KAFKA_PORT}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -28,15 +28,13 @@ services:
     volumes:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis.conf
-    ports:
-      - ${REDIS_PORT}:6379
     command: redis-server /usr/local/etc/redis.conf
       
   postgres:
     hostname: postgres
     image: postgres
     ports:
-      - ${POSTGRES_PORT}:5432
+      - ${EXPOSED_POSTGRES_PORT}:5432
     volumes:
       - ./postgres/scripts:/docker-entrypoint-initdb.d
       - ./postgres/pgdata:/var/lib/postgresql/pgdata
@@ -55,8 +53,6 @@ services:
     volumes:
       - ./marketprice:/usr/src/marketprice
       - /usr/src/marketprice/node_modules
-    ports:
-      - ${MARKETPRICE_PORT}:3000
     depends_on:
       - zookeeper
       - kafka
@@ -72,8 +68,6 @@ services:
     volumes:
       - ./matchengine:/usr/src/matchengine
       - /usr/src/matchengine/node_modules
-    ports:
-      - ${MATCHENGINE_PORT}:3001
     depends_on:
       - kafka
     restart: always
@@ -88,8 +82,6 @@ services:
     volumes:
       - ./readhistory:/usr/src/readhistory
       - /usr/src/readhistory/node_modules
-    ports:
-      - ${READHISTORY_PORT}:3002
     restart: always
     command: npm run dev
 
@@ -103,7 +95,7 @@ services:
       - ./router:/usr/src/router
       - /usr/src/router/node_modules
     ports:
-      - ${ROUTER_PORT}:3003
+      - ${EXPOSED_ROUTER_PORT}:3003
     restart: always
     command: npm run dev
 
@@ -117,7 +109,7 @@ services:
       - ./websocket:/usr/src/websocket
       - /usr/src/websocket/node_modules
     ports:
-      - ${WEBSOCKET_PORT}:3031
+      - ${EXPOSED_WEBSOCKET_PORT}:3031
     restart: always
     command: npm run dev
 

@@ -18,12 +18,8 @@ async function handleMessage(rawData: any) {
 
     if (method && params) {
       const [route, name] = method.split('.');
-      // TODO: refactor this condition
-      if (name === 'query') {
-        return this.emit(method, JSON.stringify(await methods[route][name](params, this, io)));  
-      }
-
-      return this.emit('message', JSON.stringify(await methods[route][name](params, this, io)));
+      const eventName = method ? name === 'query' : 'message';
+      return this.emit(eventName, JSON.stringify(await methods[route][name](params, this, io)));
     }
   } catch (e) {
     this.send('Invalid method');
