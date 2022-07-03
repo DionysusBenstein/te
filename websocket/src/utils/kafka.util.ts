@@ -11,6 +11,8 @@ export async function subscribeHelper(
   const { topics, event } = options;
   const channelString = params.market ? `${event}~${params.market}` : event;
 
+  console.log(`Add subscribtion ${channelString}`);
+  
   const consumer = await kafkaConsumer.subscribe(
     topics,
     (result) => {
