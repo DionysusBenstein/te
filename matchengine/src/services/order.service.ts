@@ -76,10 +76,10 @@ class OrderService {
   }
 
   isEnoughtLiquidity({ amount, side, market }: Order) {
-    const orders: Order[] = this.getMarketByName(market)[side === OrderSide.ASK ? 'bids' : 'asks'].reverse();
- 
-    let i: number = orders.length;
-    while (amount > 0 && --i >= 0) {
+    const orders: Order[] = this.getMarketByName(market)[side === OrderSide.ASK ? 'bids' : 'asks']; 
+    
+    let i: number = 0;
+    while (amount > 0 && ++i < orders.length) {
       amount -= orders[i].amount - orders[i].filled_qty;
     }
 
@@ -187,7 +187,6 @@ class OrderService {
     let dealOrderList: Order[] = [];
 
     if (n !== 0 && asks[n - 1].price <= order.price) {
-
       for (let i = n - 1; i >= 0; i--) {
         let askOrder = asks[i];
 
