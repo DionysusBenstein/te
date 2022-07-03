@@ -18,7 +18,7 @@ async function handleMessage(rawData: any) {
 
     if (method && params) {
       const [route, name] = method.split('.');
-      const eventName = method ? name === 'query' : 'message';
+      const eventName = name === 'query' ? method : 'message';
       return this.emit(eventName, JSON.stringify(await methods[route][name](params, this, io)));
     }
   } catch (e) {
