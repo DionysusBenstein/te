@@ -77,10 +77,11 @@ class OrderService {
 
   isEnoughtLiquidity({ amount, side, market }: Order) {
     const orders: Order[] = this.getMarketByName(market)[side === OrderSide.ASK ? 'bids' : 'asks']; 
-    
+
     let i: number = 0;
-    while (amount > 0 && ++i < orders.length) {
+    while (amount > 0 && i < orders.length) {
       amount -= orders[i].amount - orders[i].filled_qty;
+      i++;
     }
 
     return amount <= 0;
