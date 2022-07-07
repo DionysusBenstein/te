@@ -11,6 +11,10 @@ class KafkaConsumer {
     this.kafka = new Kafka({
       clientId,
       brokers,
+      retry: {
+        initialRetryTime: 3000,
+        retries: 10,
+      }
     });
   }
 
@@ -26,6 +30,13 @@ class KafkaConsumer {
       for (const topic of topics) {
         await consumer.subscribe({ topic });
       }
+
+      // const {CRASH} = consumer.events;
+      
+      // await consumer.on(CRASH,  ()=>{
+      //   consumer.disconnect();
+      //   return this.subscribe(topics, eachMessage)
+      // })
 
       await consumer.run({ eachMessage });
       return consumer;
