@@ -11,12 +11,14 @@ services:
     image: confluentinc/cp-kafka:5.4.0
     hostname: kafka
     ports:
-      - ${EXPOSED_KAFKA_PORT}:${EXPOSED_KAFKA_PORT}
+      - 29092:9092
+    tty: true
+    stdin_open: true
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:${EXPOSED_KAFKA_PORT}
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${EXPOSED_KAFKA_PORT}
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -34,7 +36,7 @@ services:
     hostname: postgres
     image: postgres
     ports:
-      - ${EXPOSED_POSTGRES_PORT}:5432
+      - 4432:5432
     volumes:
       - ./postgres/scripts:/docker-entrypoint-initdb.d
       - ./postgres/pgdata:/var/lib/postgresql/pgdata
@@ -95,7 +97,7 @@ services:
       - ./router:/usr/src/router
       - /usr/src/router/node_modules
     ports:
-      - ${EXPOSED_ROUTER_PORT}:3003
+      - 5003:3003
     restart: always
     command: npm run dev
 
@@ -109,7 +111,7 @@ services:
       - ./websocket:/usr/src/websocket
       - /usr/src/websocket/node_modules
     ports:
-      - ${EXPOSED_WEBSOCKET_PORT}:3031
+      - 5031:3031
     restart: always
     command: npm run dev
 

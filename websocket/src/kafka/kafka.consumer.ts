@@ -31,6 +31,13 @@ class KafkaConsumer {
         await consumer.subscribe({ topic });
       }
 
+      // const {CRASH} = consumer.events;
+      
+      // await consumer.on(CRASH,  ()=>{
+      //   consumer.disconnect();
+      //   return this.subscribe(topics, eachMessage)
+      // })
+
       await consumer.run({ eachMessage });
       return consumer;
     } catch (err) {
