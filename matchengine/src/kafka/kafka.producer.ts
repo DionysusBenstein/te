@@ -11,6 +11,10 @@ class KafkaProducer {
     this.kafka = new Kafka({
       clientId,
       brokers,
+      retry: {
+        initialRetryTime: 3000,
+        retries: 10,
+      }
     });
 
     this.producer = this.kafka.producer();

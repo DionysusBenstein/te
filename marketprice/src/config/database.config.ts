@@ -3,6 +3,9 @@ import { Sequelize } from 'sequelize';
 
 export const redisClient = createClient({
   url: 'redis://redis:6379',
+  retry_strategy : ()=>{
+    return 10000 // time in milliseconds from this https://stackoverflow.com/questions/58505318/how-to-reconnect-redis-connection-after-some-give-time
+  }
 });
 
 redisClient.on('error', (err) => console.log('Redis Client Error', err));
