@@ -6,14 +6,14 @@ services:
     image: zookeeper
     hostname: zookeeper
     ports:
-      - 5181:2181
+      - 2181:2181
 
   kafka:
     image: confluentinc/cp-kafka:5.4.0
     container_name: kafka
     hostname: kafka
     ports:
-      - 29092:9092
+      - 9092:9092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -61,7 +61,7 @@ services:
       - ./marketprice:/usr/src/marketprice
       - /usr/src/marketprice/node_modules
     ports:
-      - 5000:3000
+      - 3000:3000
     depends_on:
       - zookeeper
       - kafka
@@ -78,7 +78,7 @@ services:
       - ./matchengine:/usr/src/matchengine
       - /usr/src/matchengine/node_modules
     ports:
-      - 5001:3001
+      - 3001:3001
     depends_on:
       - kafka
     restart: always
@@ -94,7 +94,7 @@ services:
       - ./readhistory:/usr/src/readhistory
       - /usr/src/readhistory/node_modules
     ports:
-      - 5002:3002
+      - 3002:3002
     restart: always
   router:
     container_name: router
@@ -107,7 +107,7 @@ services:
       - ./router:/usr/src/router
       - /usr/src/router/node_modules
     ports:
-      - 5003:3003
+      - 3003:3003
     restart: always
 
   websocket:
@@ -121,7 +121,7 @@ services:
       - ./websocket:/usr/src/websocket
       - /usr/src/websocket/node_modules
     ports:
-      - 5031:3031
+      - 3031:3031
     restart: always
 volumes:
   zookeeper_data:

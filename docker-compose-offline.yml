@@ -6,14 +6,14 @@ services:
     image: zookeeper
     hostname: zookeeper
     ports:
-      - 5181:2181
+      - 2181:2181
 
   kafka:
     image: confluentinc/cp-kafka:5.4.0
     container_name: kafka
     hostname: kafka
     ports:
-      - 29092:9092
+      - 9092:9092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -32,7 +32,7 @@ services:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis.conf
     ports:
-      - 5379:6379
+      - 6379:6379
     command: redis-server /usr/local/etc/redis.conf
 
   postgres:
@@ -40,7 +40,7 @@ services:
     hostname: postgres
     image: postgres
     ports:
-      - 4432:5432
+      - 5432:5432
     volumes:
       - ./postgres/scripts:/docker-entrypoint-initdb.d
       - ./postgres/pgdata:/var/lib/postgresql/pgdata
@@ -61,7 +61,7 @@ services:
       - ./marketprice:/usr/src/marketprice
       - /usr/src/marketprice/node_modules
     ports:
-      - 5000:3000
+      - 3000:3000
     depends_on:
       - zookeeper
       - kafka
@@ -84,7 +84,7 @@ services:
       - ./matchengine:/usr/src/matchengine
       - /usr/src/matchengine/node_modules
     ports:
-      - 5001:3001
+      - 3001:3001
     depends_on:
       - kafka
     restart: always
@@ -106,7 +106,7 @@ services:
       - ./readhistory:/usr/src/readhistory
       - /usr/src/readhistory/node_modules
     ports:
-      - 5002:3002
+      - 3002:3002
     restart: always
     command:
       - /bin/bash
@@ -126,7 +126,7 @@ services:
       - ./router:/usr/src/router
       - /usr/src/router/node_modules
     ports:
-      - 5003:3003
+      - 5000:3003
     restart: always
     command:
       - /bin/bash
