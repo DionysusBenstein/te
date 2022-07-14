@@ -1,5 +1,5 @@
 import { Expose } from "class-transformer";
-import { IsInt, IsNotEmpty, IsPositive, IsString, Max } from "class-validator";
+import { IsNotEmpty, IsString, } from "class-validator";
 
 export class MarketStatusTodayParams {
   @Expose()

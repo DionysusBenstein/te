@@ -27,7 +27,7 @@ export const methods = {
     },
 
     async summary(args, callback) {
-      callback(null, await marketController.summary());
+      callback(null, await marketController.summary(args));
     }
   }
 };

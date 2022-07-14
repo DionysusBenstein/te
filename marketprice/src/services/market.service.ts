@@ -3,6 +3,7 @@ import { MarketStatusTodayParams } from './../dto/market-status-today-params.dto
 import { MarketStatusParams } from './../dto/market-status-params.dto';
 import { MarketDealsParams } from './../dto/market-deals-params.dto';
 import { MarketLastParams } from '../dto/market-last-params.dto';
+import { MarketSummaryParams } from '../dto/market-summary-params.dto';
 import { KlineParams } from '../dto/kline-params.dto';
 import { KafkaTopic } from '../typings/enums/enums';
 import { onDealMessage } from '../utils/market.util';
@@ -130,10 +131,9 @@ export class MarketService {
     return klines.slice(offset, limit);
   }
 
-  async summary() {
+  async summary({ market }: MarketSummaryParams) {
     const marketList: any = deasyncRequestHelper('market.list', {}, client);
-
-    return Promise.all(marketList.map(async (market: any) => {
+    const marketSummary = Promise.all(marketList.map(async (market: any) => {
       const status: any = await this.getStatusToday({ market: market.name });
       const usdPriceQueryResult: any = await sequelize.query(
         'SELECT usdPrice from LivePrice WHERE currencyName = :market', {
@@ -165,6 +165,18 @@ export class MarketService {
         ...status
       }
     }));
+
+    
+    if (market) {
+      const [singleMarketSummary] = (await marketSummary).filter(
+        (marketSummaryItem) => 
+          marketSummaryItem.pairName.split('-').join('') === market
+      );
+
+      return singleMarketSummary;
+    }
+
+    return marketSummary;
   }
 }
 
