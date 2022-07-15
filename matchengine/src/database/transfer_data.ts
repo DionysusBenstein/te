@@ -77,10 +77,10 @@ export const transfer = async () => {
     const resp = await orderController.putLimit(putLimitParams);
     const resp1 = await orderController.putLimit(putLimitParams1);
     
-    console.log(JSON.stringify(resp));
-    console.log(JSON.stringify(resp1));
+    // console.log(JSON.stringify(resp));
+    // console.log(JSON.stringify(resp1));
   }
 
-  console.log('Finish migrate order: ', (new Date()).toString());
-  console.log('Duration: ', (((new Date()).valueOf() - startTime.valueOf()) / 1000 / 60).toString(), ' min');
+  console.log('Finish migrate order:', (new Date()).toString());
+  console.log('Duration:', (((new Date()).valueOf() - startTime.valueOf()) / 1000 / 60).toString(), 'min');
 };

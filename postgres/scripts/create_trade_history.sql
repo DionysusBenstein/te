@@ -6,7 +6,7 @@ CREATE TABLE order_history (
 
     "type"           VARCHAR(6) NOT NULL,
     "side"           VARCHAR(4) NOT NULL,
-    "market"         VARCHAR(7) NOT NULL,
+    "market"         VARCHAR(8) NOT NULL,
     "stock"          VARCHAR(4),
     "money"          VARCHAR(4),
     "status"         VARCHAR(20) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE deal_history (
     "deal_user_id"   uuid NOT NULL,
     "order_id"       uuid NOT NULL,
     "deal_order_id"  uuid NOT NULL,
-    "market"         VARCHAR(7) NOT NULL,
+    "market"         VARCHAR(8) NOT NULL,
     "role"           VARCHAR(5) NOT NULL,
     "price"          DECIMAL(30,8) NOT NULL,
     "amount"         DECIMAL(30,8) NOT NULL,

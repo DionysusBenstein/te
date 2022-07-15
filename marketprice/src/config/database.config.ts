@@ -16,9 +16,9 @@ try {
   console.log(err);
 }
 
-export const sequelize = new Sequelize('globiance_staging', 'globiance_db', 'M4lt4!23!', {
-  host: "192.168.1.9",
-  port: 14433,
+export const sequelize = new Sequelize('globiance_prod', 'globiance_prod', '!G05unL1v3Pl5%', {
+  host: "192.168.1.1",
+  port: 1433,
   dialect: "mssql",
   logging: false,
   dialectOptions: {
