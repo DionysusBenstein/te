@@ -14,7 +14,7 @@ export class PendingParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   user_id: string;
 
   @Expose()

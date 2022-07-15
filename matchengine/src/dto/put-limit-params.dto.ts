@@ -6,6 +6,7 @@ import {
   IsString,
   IsEnum,
   IsPositive,
+  IsOptional,
   Min,
   IsIn,
 } from 'class-validator';
@@ -17,7 +18,7 @@ export class PutLimitParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   user_id: string;
 
   @Expose()
@@ -68,4 +69,16 @@ export class PutLimitParams {
   @IsNumber()
   @Min(0)
   total_fee: number;
+
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  create_time?: string;
+  
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  update_time?: string;
 }

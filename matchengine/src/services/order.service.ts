@@ -396,9 +396,14 @@ class OrderService {
     price,
     amount,
     total_fee,
+    create_time,
+    update_time
   }: PutLimitParams): Promise<Order> {
     const precision = 10 ** getAssetConfigByName(money).prec;
     const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+    create_time = create_time || getCurrentTimestamp();
+    update_time = update_time || 'infinity';
 
     const order: Order = {
       id: uuidv4(),
@@ -419,8 +424,8 @@ class OrderService {
       total_fee,
       deal_money: amount - total_fee,
       deal_stock: amount / pricePrec - total_fee,
-      create_time: getCurrentTimestamp(),
-      update_time: 'infinity',
+      create_time,
+      update_time
     };
 
     db.appendOrderHistory(order);
@@ -434,7 +439,7 @@ class OrderService {
 
     if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
       for (const dealOrder of dealOrderList) {
-        const updateTime = getCurrentTimestamp();
+        const updateTime = update_time === 'infinity' ? getCurrentTimestamp() : update_time;
 
         order.update_time = updateTime;
         dealOrder.update_time = updateTime;
@@ -469,6 +474,8 @@ class OrderService {
     side,
     amount,
     total_fee,
+    create_time,
+    update_time
   }: PutMarketParams) {
     const order: Order = {
       id: uuidv4(),
@@ -489,8 +496,8 @@ class OrderService {
       total_fee,
       deal_money: amount - total_fee,
       deal_stock: 0,
-      create_time: getCurrentTimestamp(),
-      update_time: 'infinity',
+      create_time: create_time || getCurrentTimestamp(),
+      update_time: update_time || 'infinity',
     };
 
     if (!this.isEnoughtLiquidity(order)) {
@@ -518,7 +525,7 @@ class OrderService {
 
       for (let i = 0; i < dealOrderList.length; i++) {
         const dealOrder = dealOrderList[i];
-        order.update_time = getCurrentTimestamp();
+        order.update_time = update_time === 'infinity' ? getCurrentTimestamp() : update_time;
         
         order.deal_stock = dealOrder.price;
         const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);

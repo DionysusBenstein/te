@@ -3,6 +3,7 @@ import marketController from './controllers/market.controller';
 import balanceController from './controllers/balance.controller';
 import orderController from './controllers/order.controller';
 import orderService from './services/order.service';
+import { transfer } from './database/transfer_data';
 
 export const methods = {
   asset: {
@@ -67,4 +68,10 @@ export const methods = {
       callback(null, await marketController.list());
     },
   },
+
+  transfer: {
+    async data(args, callback) {
+      callback(null, await transfer());
+    }
+  }
 };

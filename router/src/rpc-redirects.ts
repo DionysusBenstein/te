@@ -37,4 +37,7 @@ export const redirects = {
     list: redirect(services.matchengine),
     summary: redirect(services.marketprice),
   },
+  transfer: {
+    data: redirect(services.matchengine)
+  }
 } as const;

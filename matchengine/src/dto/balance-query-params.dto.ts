@@ -12,7 +12,7 @@ export class BalanceQueryParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   user_id: string;
 
   @Expose()

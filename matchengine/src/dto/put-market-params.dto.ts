@@ -17,7 +17,7 @@ export class PutMarketParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   user_id: string;
 
   @Expose()
@@ -63,4 +63,14 @@ export class PutMarketParams {
   @IsNumber()
   @Min(0)
   total_fee: number;
+
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  create_time?: string;
+
+  @Expose()
+  @IsString()
+  @IsNotEmpty()
+  update_time?: string;
 }

@@ -14,7 +14,7 @@ export class OrderHistoryParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   user_id: string;
 
   @Expose()
@@ -37,7 +37,7 @@ export class OrderHistoryReportParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   user_id: string;
 
   @Expose()

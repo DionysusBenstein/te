@@ -11,7 +11,7 @@ export class PendingDetailParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   order_id: string;
 
   @Expose()

@@ -11,7 +11,7 @@ export class CancelParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   user_id: string;
   
   @Expose()
@@ -23,7 +23,7 @@ export class CancelParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  @IsUUID('4')
+  @IsUUID()
   order_id: string;
 
 }
