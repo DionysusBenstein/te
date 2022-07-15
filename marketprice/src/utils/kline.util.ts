@@ -1,8 +1,8 @@
 import { KlineInfo } from '../typings/types/market-info.type';
 
-export function createKlineInfo(price: number): KlineInfo {
+export function createKlineInfo(price: number, time?: any): KlineInfo {
   const kinfo: KlineInfo = {
-    time: Date.now(),
+    time: time ? time : Date.now(),
     open: price,
     close: price,
     high: price,

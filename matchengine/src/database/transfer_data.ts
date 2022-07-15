@@ -31,6 +31,8 @@ export const transfer = async () => {
 
   //     orderController.putLimit(putLimitParams);
   // }
+  const startTime = new Date();
+  console.log('Start migrate order: ', startTime.toString());
 
   const tradeMapping: any = await sequelize.query(
     "SELECT * FROM TradeMapping WHERE TradeMapping.createdAt >= getdate()-1 ORDER BY CONVERT(time, TradeMapping.createdAt)", {
@@ -78,4 +80,7 @@ export const transfer = async () => {
     console.log(JSON.stringify(resp));
     console.log(JSON.stringify(resp1));
   }
+
+  console.log('Finish migrate order: ', (new Date()).toString());
+  console.log('Duration: ', (((new Date()).valueOf() - startTime.valueOf()) / 1000 / 60).toString(), ' min');
 };
