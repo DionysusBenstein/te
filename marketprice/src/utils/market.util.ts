@@ -37,7 +37,8 @@ export async function marketUpdate(dealInfo: any) {
     } else {
       // For correct migrate data
       // kinfo = createKlineInfo(deal.price);
-      kinfo = createKlineInfo(deal.price, deal.time);
+      const ktime =  Math.floor((new Date(deal.time).getTime()));
+      kinfo = createKlineInfo(deal.price, ktime);
     }
 
     updateKlineInfo(kinfo, deal.price, deal.amount);
