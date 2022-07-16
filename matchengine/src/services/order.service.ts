@@ -403,7 +403,7 @@ class OrderService {
     const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
 
     create_time = create_time || getCurrentTimestamp();
-    update_time = update_time || 'infinity';
+    update_time = update_time || getCurrentTimestamp();
 
     const order: Order = {
       id: uuidv4(),
@@ -425,7 +425,7 @@ class OrderService {
       deal_money: amount - total_fee,
       deal_stock: amount / pricePrec - total_fee,
       create_time,
-      update_time
+      update_time:update_time === 'infinity' ? getCurrentTimestamp() : update_time
     };
 
     db.appendOrderHistory(order);

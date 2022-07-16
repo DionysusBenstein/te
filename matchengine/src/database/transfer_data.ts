@@ -6,7 +6,7 @@ import { PutLimitParams } from '../dto/put-limit-params.dto';
 
 async function openOrders() {
   const ordersQueryResult: any = await sequelize.query(
-    "SELECT * FROM TradeOrders WHERE tradeType = 'limit' status in('active','partially')", {
+    "SELECT * FROM TradeOrders WHERE tradeType = 'limit' AND status in('active','partially')", {
     // plain: true,
     // raw: true,
     type: QueryTypes.SELECT
@@ -35,7 +35,7 @@ async function openOrders() {
 
 async function deals() {
   const tradeMapping: any = await sequelize.query(
-    "SELECT * FROM TradeMapping WHERE TradeMapping.createdAt >= getdate()-5 ORDER BY CONVERT(datetime, TradeMapping.createdAt)", {
+    "SELECT * FROM TradeMapping WHERE TradeMapping.createdAt >= getdate()-1 and triggerQty <> 0 and triggerPrice <> 0 ORDER BY CONVERT(datetime, TradeMapping.createdAt)", {
     type: QueryTypes.SELECT
   });
 
@@ -43,7 +43,7 @@ async function deals() {
   let i = 0;
 
   for await (const orderOrig of tradeMapping) {
-    console.log(`${++i}/${l}`);
+    // console.log(`${++i}/${l}`);
     const putLimitParams: PutLimitParams = {
       exchange_id: orderOrig.exchangeId,
       exchange_name: orderOrig.type === 'buy' ? orderOrig.buyerExchangeName : orderOrig.sellerExchangeName,
