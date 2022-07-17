@@ -42,8 +42,8 @@ async function openOrders() {
       price: orderOrig.price || 0,
       amount: Math.abs(orderOrig.amount) || 0,
       total_fee: orderOrig.fee,
-      create_time: orderOrig.createdAt.toISOString(),
-      update_time: orderOrig.updatedAt.toISOString()
+      // create_time: orderOrig.createdAt.toISOString(),
+      // update_time: orderOrig.updatedAt.toISOString()
     }
 
     const resp = await orderController.putLimit(putLimitParams);
@@ -55,7 +55,7 @@ async function deals() {
   const tradeMapping: any = await sequelize.query(
     `
     SELECT * FROM TradeMapping tm
-    LEFT JOIN TradeOrders AS tor ON tor.orderId = (CASE WHEN tm.type = 'buy' THEN tm.buyerOrderId ELSE tm.sellerOrderId )  
+    LEFT JOIN TradeOrders AS tor ON tor.orderId = (CASE WHEN tm.type = 'buy' THEN tm.buyerOrderId ELSE tm.sellerOrderId END )  
     WHERE tm.createdAt >= getdate()-1 ORDER BY CONVERT(datetime, tm.createdAt)
     `
     , {
@@ -78,8 +78,8 @@ async function deals() {
       price: orderOrig.triggerPrice || 0,
       amount: orderOrig.triggerQty || 0,
       total_fee: orderOrig.side === 'buy' ? orderOrig.buyerFee : orderOrig.sellerFee,
-      create_time: orderOrig.createdAt.toISOString(),
-      update_time: orderOrig.updatedAt.toISOString()
+      // create_time: orderOrig.createdAt.toISOString(),
+      // update_time: orderOrig.updatedAt.toISOString()
     }
 
     const putLimitParams1: PutLimitParams = {
@@ -93,8 +93,8 @@ async function deals() {
       price: orderOrig.triggerPrice || 0,
       amount: orderOrig.triggerQty || 0,
       total_fee: orderOrig.side !== 'buy' ? orderOrig.buyerFee : orderOrig.sellerFee,
-      create_time: orderOrig.createdAt.toISOString(),
-      update_time: orderOrig.updatedAt.toISOString()
+      // create_time: orderOrig.createdAt.toISOString(),
+      // update_time: orderOrig.updatedAt.toISOString()
     }
 
     const resp = await orderController.putLimit(putLimitParams);
@@ -109,7 +109,7 @@ export const transfer = async () => {
   const startTime = new Date();
   console.log('Start migrate order: ', startTime.toString());
 
-  // await deals();
+  await deals();
   await openOrders();
 
   console.log('Finish migrate order:', (new Date()).toString());
