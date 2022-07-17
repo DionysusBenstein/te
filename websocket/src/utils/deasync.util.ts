@@ -9,7 +9,5 @@ export function deasyncRequestHelper(method: string, params: any, client: any) {
     deasync.runLoopOnce();
   }
 
-  console.log('::::::::::::::', res);
-  
   return res.err || res.result;
 }

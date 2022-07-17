@@ -4,9 +4,24 @@ import { sequelize } from '../config/database.config';
 import orderController from '../controllers/order.controller';
 import { PutLimitParams } from '../dto/put-limit-params.dto';
 
+const exchangeName = 'globiance';
+const exchangeId = '2e54a010-4063-11eb-820e-27bfaf6f90c6';
+
 async function openOrders() {
   const ordersQueryResult: any = await sequelize.query(
-    "SELECT * FROM TradeOrders WHERE tradeType = 'limit' AND status in('active','partially')", {
+    `
+      SELECT
+        pairName, userId, price, [type], originalQty, filledQty, fee, createdAt, updatedAt,
+        CASE WHEN filledQty <> '0' THEN originalQty - filledQty  ELSE originalQty END as amount,
+        CASE WHEN filledQty <> '0' THEN (originalQty - filledQty) * price  ELSE originalQty* price END as total
+		  FROM
+		  	TradeOrders with (nolock)
+		  WHERE
+		  	deletedAt IS NULL
+		  	AND exchangeId = '${exchangeId}'
+		  	AND [status] IN('active','partially')
+		  ORDER BY id DESC;
+    `, {
     // plain: true,
     // raw: true,
     type: QueryTypes.SELECT
@@ -17,25 +32,28 @@ async function openOrders() {
   for await (const orderOrig of ordersQueryResult) {
     console.log(`${++i}/${l}`);
     const putLimitParams: PutLimitParams = {
-      exchange_id: orderOrig.exchangeId,
-      exchange_name: orderOrig.exchangeName,
+      exchange_id: exchangeId,
+      exchange_name: exchangeName,
       user_id: orderOrig.userId,
       side: orderOrig.type,
       market: orderOrig.pairName.replace("-", ""),
-      stock: orderOrig.firstCurrencyName,
-      money: orderOrig.secondCurrencyName,
+      stock: orderOrig.pairName.split('-')[0],
+      money: orderOrig.pairName.split('-')[1],
       price: orderOrig.price || 0,
-      amount: orderOrig.originalQty || 0,
-      total_fee: orderOrig.fee
+      amount: Math.abs(orderOrig.amount) || 0,
+      total_fee: orderOrig.fee,
+      create_time: orderOrig.createdAt.toISOString(),
+      update_time: orderOrig.updatedAt.toISOString()
     }
 
-    await orderController.putLimit(putLimitParams);
+    const resp = await orderController.putLimit(putLimitParams);
+    console.log(JSON.stringify(resp));
   }
 }
 
 async function deals() {
   const tradeMapping: any = await sequelize.query(
-    "SELECT * FROM TradeMapping WHERE TradeMapping.createdAt >= getdate()-1 and triggerQty <> 0 and triggerPrice <> 0 ORDER BY CONVERT(datetime, TradeMapping.createdAt)", {
+    "SELECT * FROM TradeMapping WHERE TradeMapping.createdAt >= getdate()-1 ORDER BY CONVERT(datetime, TradeMapping.createdAt)", {
     type: QueryTypes.SELECT
   });
 
@@ -86,7 +104,7 @@ export const transfer = async () => {
   const startTime = new Date();
   console.log('Start migrate order: ', startTime.toString());
 
-  await deals();
+  // await deals();
   await openOrders();
 
   console.log('Finish migrate order:', (new Date()).toString());
