@@ -8,6 +8,7 @@ import {
   IsPositive,
   Min,
   IsIn,
+  IsOptional,
 } from 'class-validator';
 import { ContainsStockAndMoney } from '../validators/contains-stock-and-money.validator';
 import { getMarketList, getAssetList } from '../utils/config.util';
@@ -67,10 +68,12 @@ export class PutMarketParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   create_time?: string;
 
   @Expose()
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   update_time?: string;
 }
