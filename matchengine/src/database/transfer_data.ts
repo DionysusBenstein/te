@@ -53,7 +53,12 @@ async function openOrders() {
 
 async function deals() {
   const tradeMapping: any = await sequelize.query(
-    "SELECT * FROM TradeMapping WHERE TradeMapping.createdAt >= getdate()-1 ORDER BY CONVERT(datetime, TradeMapping.createdAt)", {
+    `
+    SELECT * FROM TradeMapping tm
+    LEFT JOIN TradeOrders AS tor ON tor.orderId = (CASE WHEN tm.type = 'buy' THEN tm.buyerOrderId ELSE tm.sellerOrderId )  
+    WHERE tm.createdAt >= getdate()-1 ORDER BY CONVERT(datetime, tm.createdAt)
+    `
+    , {
     type: QueryTypes.SELECT
   });
 
