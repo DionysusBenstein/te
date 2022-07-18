@@ -57,7 +57,7 @@ async function deals() {
   const tradeMapping: any = await sequelize.query(
     `
       SELECT
-	    	Pairs.[name],tm.[triggerPrice] as price,tm.[triggerQty] as amount,[triggerTotal],tm.updatedAt,tm.createdAt,tm.type
+	    	tm.uniqueId,Pairs.[name],tm.[triggerPrice] as price,tm.[triggerQty] as amount,[triggerTotal],tm.updatedAt,tm.createdAt,tm.type
 	    	,CASE WHEN tm.type <> 'sell' THEN [buyerUserId] ELSE [sellerUserId]  END AS userId
 	    	,CASE WHEN tm.type = 'sell' THEN [buyerUserId] ELSE [sellerUserId]  END AS dealUserId
 	    	,CASE WHEN tm.type <> 'sell' THEN [buyerOrderId] ELSE [sellerOrderId]  END AS orderId
@@ -170,8 +170,8 @@ export const transfer = async () => {
   const startTime = new Date();
   console.log('Start migrate order: ', startTime.toString());
 
-  // await deals();
-  await tradeHistory();
+  await deals();
+  // await tradeHistory();
   // await openOrders();
 
   console.log('Finish migrate order:', (new Date()).toString());
