@@ -30,7 +30,11 @@ async function handleMessage(rawData: any) {
 io.use((socket, next) => {
   if (socket.handshake.auth.token === process.env.ACCESS_TOKEN) {
     console.log('Auth succsess!');
+<<<<<<< HEAD
    next();
+=======
+    next();
+>>>>>>> 628d011df9389f89be70bac767cc37629e04a163
   } else {
     next(new Error('Not authorized'));
   }
