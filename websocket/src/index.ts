@@ -27,14 +27,14 @@ async function handleMessage(rawData: any) {
   }
 }
 
-// io.use((socket, next) => {
-//   if (socket.handshake.auth.token === process.env.ACCESS_TOKEN) {
-//     console.log('Auth succsess!');
-//     next();
-//   } else {
-//     next(new Error('Not authorized'));
-//   }
-// });
+io.use((socket, next) => {
+  if (socket.handshake.auth.token === process.env.ACCESS_TOKEN) {
+    console.log('Auth succsess!');
+   next();
+  } else {
+    next(new Error('Not authorized'));
+  }
+});
 
 io.on('connection', socket => {
   console.log(`Client with id ${socket.id} connected`);

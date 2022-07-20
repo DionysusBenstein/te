@@ -20,7 +20,7 @@ export async function subscribeHelper(
     (result) => {
       const { key } = result.message;
 
-      console.log(`Message ${channelString} :: ${key}`);
+      // console.log(`Message ${channelString} :: ${key}`);
       ws.emit(channelString, JSON.stringify({
         stream: channelString,
         market: params.market,

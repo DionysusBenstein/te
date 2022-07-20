@@ -57,7 +57,7 @@ async function deals() {
   const tradeMapping: any = await sequelize.query(
     `
       SELECT
-	    	Pairs.[name],tm.[triggerPrice] as price,tm.[triggerQty] as amount,[triggerTotal],tm.updatedAt,tm.createdAt,tm.type
+	    	tm.uniqueId,Pairs.[name],tm.[triggerPrice] as price,tm.[triggerQty] as amount,[triggerTotal],tm.updatedAt,tm.createdAt,tm.type
 	    	,CASE WHEN tm.type <> 'sell' THEN [buyerUserId] ELSE [sellerUserId]  END AS userId
 	    	,CASE WHEN tm.type = 'sell' THEN [buyerUserId] ELSE [sellerUserId]  END AS dealUserId
 	    	,CASE WHEN tm.type <> 'sell' THEN [buyerOrderId] ELSE [sellerOrderId]  END AS orderId
@@ -74,7 +74,7 @@ async function deals() {
 	    	tm.deletedAt IS NULL
 	    	AND tm.exchangeId = '${exchangeId}'
       AND
-        tm.createdAt >= getdate()-1
+        tm.createdAt >= getdate()-5
       ORDER BY CONVERT(datetime, tm.updatedAt)
     `
     , {
@@ -170,9 +170,8 @@ export const transfer = async () => {
   const startTime = new Date();
   console.log('Start migrate order: ', startTime.toString());
 
-  // await deals();
-  await tradeHistory();
-  // await openOrders();
+   // await deals();
+   // await tradeHistory();
 
   console.log('Finish migrate order:', (new Date()).toString());
   console.log('Duration:', (((new Date()).valueOf() - startTime.valueOf()) / 1000 / 60).toString(), 'min');
