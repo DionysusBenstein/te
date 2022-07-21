@@ -65,7 +65,13 @@ class OrderController {
       };
     }
 
-    return await this.orderService.cancel(data);
+    const result: any = await this.orderService.cancel(data)
+
+    if (result) {
+      return result;
+    }
+
+    return 'Order not found';
   }
 
   async depth(params: DepthParams) {

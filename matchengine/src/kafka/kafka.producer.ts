@@ -1,4 +1,4 @@
-import { Kafka } from 'kafkajs';
+import { Kafka, logLevel } from 'kafkajs';
 import { Producer, KafkaConfig } from 'kafkajs/types';
 import config from '../config/kafka.config';
 
@@ -14,7 +14,8 @@ class KafkaProducer {
       retry: {
         initialRetryTime: 3000,
         retries: 10,
-      }
+      },
+      logLevel: logLevel.ERROR
     });
 
     this.producer = this.kafka.producer();

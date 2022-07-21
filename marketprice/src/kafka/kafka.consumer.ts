@@ -1,4 +1,4 @@
-import { Kafka } from 'kafkajs';
+import { Kafka, logLevel } from 'kafkajs';
 import { Consumer, KafkaConfig } from 'kafkajs/types';
 import { v4 as uuidv4 } from 'uuid';
 import config from '../config/kafka.config';
@@ -14,7 +14,8 @@ class KafkaConsumer {
       retry: {
         initialRetryTime: 3000,
         retries: 10,
-      }
+      },
+      logLevel: logLevel.ERROR
     });
   }
 

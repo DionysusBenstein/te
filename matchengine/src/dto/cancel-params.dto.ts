@@ -3,9 +3,11 @@ import {
   IsString,
   IsNotEmpty,
   IsUUID,
-  IsIn
+  IsIn,
+  IsEnum
 } from 'class-validator';
 import { getMarketList } from '../utils/config.util';
+import { OrderSide } from '../typings/enums';
 
 export class CancelParams {
   @Expose()
@@ -25,5 +27,8 @@ export class CancelParams {
   @IsNotEmpty()
   @IsUUID()
   order_id: string;
-
+  
+  @Expose()
+  @IsEnum(OrderSide)
+  side: OrderSide;
 }

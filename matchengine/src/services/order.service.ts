@@ -425,7 +425,7 @@ class OrderService {
       deal_money: amount - total_fee,
       deal_stock: amount / pricePrec - total_fee,
       create_time,
-      update_time:update_time === 'infinity' ? getCurrentTimestamp() : update_time
+      update_time: update_time === 'infinity' ? getCurrentTimestamp() : update_time
     };
 
     db.appendOrderHistory(order);
@@ -507,7 +507,7 @@ class OrderService {
     await db.appendOrderHistory(order);
 
     let executedResult: { dealOrderList: Order[], order: Order };
-    
+
     if (side === OrderSide.ASK) {
       executedResult = await this.executeAskMarketOrder(order);
     } else {
@@ -526,7 +526,7 @@ class OrderService {
       for (let i = 0; i < dealOrderList.length; i++) {
         const dealOrder = dealOrderList[i];
         order.update_time = update_time === 'infinity' ? getCurrentTimestamp() : update_time;
-        
+
         order.deal_stock = dealOrder.price;
         const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
 
@@ -549,36 +549,28 @@ class OrderService {
     return { message: 'Order book is empty' };
   }
 
-  async cancel({ user_id, market, order_id }: CancelParams) {
+  async cancel({ user_id, market, order_id, side }: CancelParams) {
+    const removeOrder = async (user_id, order_id, orderbook): Promise<Order | void> => {
+      let orderIndex: number = orderbook.findIndex(
+        (order) => order.id === order_id && order.user_id === user_id
+      );
+
+      if (orderIndex >= 0) {
+        const [order] = orderbook.splice(orderIndex, 1);
+
+        order.status = order.filled_qty > 0 ? OrderStatus.PARTIALLY_CANCELED : OrderStatus.CANCELED;
+        db.updateOrder(order, getCurrentTimestamp());
+        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL, order);
+        return order;
+      }
+    };
+
     const { asks, bids }: Market = this.getMarketByName(market);
-    let orderIndex: number = asks.findIndex(
-      (order) => order.id === order_id && order.user_id === user_id
-    );
 
-    if (orderIndex >= 0) {
-      const [order] = asks.splice(orderIndex, 1);
-      console.log('PART CANC', order);
-
-      order.status = order.filled_qty > 0 ? OrderStatus.PARTIALLY_CANCELED : OrderStatus.CANCELED;
-      db.updateOrder(order, getCurrentTimestamp());
-      await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL);
-      return order;
+    if (side === OrderSide.ASK) {
+      return await removeOrder(user_id, order_id, asks);
     }
-    orderIndex = bids.findIndex(
-      (order) => order.id === order_id && order.user_id === user_id
-    );
-
-    if (orderIndex < 0) {
-      return 'Order not found';
-    }
-
-    const [order] = bids.splice(orderIndex, 1);
-    console.log('PART CANC', order);
-
-    order.status = order.filled_qty > 0 ? OrderStatus.PARTIALLY_CANCELED : OrderStatus.CANCELED;
-    db.updateOrder(order, getCurrentTimestamp());
-    await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL, order);
-    return order;
+    return await removeOrder(user_id, order_id, bids);
   }
 
   book({ market, side, limit, offset }: OrderBookParams): any {
