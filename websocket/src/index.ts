@@ -28,6 +28,10 @@ async function handleMessage(rawData: any) {
 }
 
 io.use((socket, next) => {
+  console.log('Connection auth info:', socket.handshake.auth);
+  console.log('Origin:', socket.handshake.headers.origin);
+  console.log('--------------------------');
+  
   if (socket.handshake.auth.token === process.env.ACCESS_TOKEN) {
     console.log('Auth succsess!');
     next();
@@ -37,8 +41,9 @@ io.use((socket, next) => {
 });
 
 io.on('connection', socket => {
-  console.log(`Client with id ${socket.id} connected`);
+  console.log(`Connection with id ${socket.id} connected, total count: ${io.engine.clientsCount}`);
   socket.on('message', handleMessage);
+  socket.on('disconnect', reason => console.log('Disconnected:', reason));
 });
 
 app.get("/", (req, res) => {
