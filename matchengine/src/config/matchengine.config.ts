@@ -7,7 +7,7 @@
 
 export default {
   assets: [
-    { name: 'XDC', prec: 8 },
+    { name: 'XDC', prec: 10 },
     { name: 'BTC', prec: 8 },
     { name: 'EUR', prec: 2 },
     { name: 'ETH', prec: 8 },
