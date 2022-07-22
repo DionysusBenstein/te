@@ -401,7 +401,7 @@ class OrderService {
   }: PutLimitParams): Promise<Order> {
     const precision = 10 ** getAssetConfigByName(money).prec;
     const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
-
+    const total = amount * pricePrec;
     create_time = create_time || getCurrentTimestamp();
     update_time = update_time || getCurrentTimestamp();
 
@@ -418,12 +418,12 @@ class OrderService {
       price: pricePrec,
       amount,
       filled_qty: 0,
-      total: amount * pricePrec,
+      total,
       executed_total: 0,
       status: OrderStatus.ACTIVE,
       total_fee,
-      deal_money: amount - total_fee,
-      deal_stock: amount / pricePrec - total_fee,
+      deal_money: side === OrderSide.ASK ? total - total_fee : total,
+      deal_stock: side === OrderSide.BID ? amount - total_fee : amount,
       create_time,
       update_time: update_time === 'infinity' ? getCurrentTimestamp() : update_time
     };
@@ -494,8 +494,8 @@ class OrderService {
       total: 0,
       executed_total: 0,
       total_fee,
-      deal_money: amount - total_fee,
-      deal_stock: 0,
+      deal_money: 0,
+      deal_stock: side === OrderSide.BID ? amount - total_fee : amount,
       create_time: create_time || getCurrentTimestamp(),
       update_time: update_time || 'infinity',
     };
