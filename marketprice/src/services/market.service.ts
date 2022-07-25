@@ -154,12 +154,12 @@ export class MarketService {
       return {
         pairId: market.pairId,
         pairName: `${market.stock}-${market.money}`,
-        percentChange,
-        change24h,
-        change,
+        percentChange: parseFloat(percentChange.toFixed(12)),
+        change24h: parseFloat(change24h.toFixed(12)),
+        change: parseFloat(change.toFixed(12)),
         colour,
-        price: status.last,
-        usdPrice: status.last * usdPrice,
+        price: parseFloat(status.last.toFixed(12)),
+        usdPrice: parseFloat((status.last * usdPrice).toFixed(2)),
         xdcPrice: 0,
         favStatus: 'inActive',
         ...status
