@@ -22,7 +22,7 @@ export default {
     { name: 'USDG', prec: 8 },
     { name: 'USD', prec: 2 },
     { name: 'PLI', prec: 8 },
-    { name: 'GBEX', prec: 8 },
+    { name: 'GBEX', prec: 12 },
     { name: 'LGCY', prec: 8 },
     { name: 'WXDC', prec: 8 },
     { name: 'USDC', prec: 8 },
