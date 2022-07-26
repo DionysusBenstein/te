@@ -150,13 +150,14 @@ class Queries {
     }
   }
 
-  async updateOrder(order: Order, updateTime: string): Promise<Order[]> {
+  async updateOrder(order: Order): Promise<Order[]> {
     try {
       const queryString: string = `
         UPDATE "order_history"
         SET
           status = '${order.status}',
-          update_time = '${updateTime}'
+          filled_qty = ${order.filled_qty},
+          update_time = '${order.update_time}'
         WHERE id = '${order.id}'
       ;`;
 
@@ -169,7 +170,7 @@ class Queries {
     }
   }
 
-  async updateMarketOrder(order: Order, updateTime: string): Promise<Order[]> {
+  async updateMarketOrder(order: Order): Promise<Order[]> {
     try {
       const queryString: string = `
         UPDATE "order_history"
@@ -179,7 +180,7 @@ class Queries {
           total = '${order.total}',
           filled_qty = '${order.filled_qty}',
           executed_total = '${order.executed_total}',
-          update_time = '${updateTime}'
+          update_time = '${order.update_time}'
         WHERE id = '${order.id}'
       ;`;
 

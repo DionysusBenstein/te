@@ -444,8 +444,8 @@ class OrderService {
         order.update_time = updateTime;
         dealOrder.update_time = updateTime;
 
-        db.updateOrder(order, updateTime);
-        db.updateOrder(dealOrder, updateTime);
+        db.updateOrder(order);
+        db.updateOrder(dealOrder);
 
         const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
 
@@ -457,6 +457,8 @@ class OrderService {
 
         this.settleBookSize++;
       }
+      console.log(order);
+      
       return order;
     }
 
@@ -559,7 +561,8 @@ class OrderService {
         const [order] = orderbook.splice(orderIndex, 1);
 
         order.status = order.filled_qty > 0 ? OrderStatus.PARTIALLY_CANCELED : OrderStatus.CANCELED;
-        db.updateOrder(order, getCurrentTimestamp());
+        order.update_time = getCurrentTimestamp();
+        db.updateOrder(order);
         await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL, order);
         return order;
       }
