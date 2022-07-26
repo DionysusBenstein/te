@@ -150,15 +150,16 @@ class Queries {
     }
   }
 
-  async updateOrder(order: Order): Promise<Order[]> {
+  async updateOrder({ id, status, filled_qty, executed_total, update_time }: Order): Promise<Order[]> {
     try {
       const queryString: string = `
         UPDATE "order_history"
         SET
-          status = '${order.status}',
-          filled_qty = ${order.filled_qty},
-          update_time = '${order.update_time}'
-        WHERE id = '${order.id}'
+          status = '${status}',
+          filled_qty = ${filled_qty},
+          executed_total = ${executed_total},
+          update_time = '${update_time}'
+        WHERE id = '${id}'
       ;`;
 
       const response: QueryResult = await pool.query(queryString);
