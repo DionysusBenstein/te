@@ -457,7 +457,6 @@ class OrderService {
 
         this.settleBookSize++;
       }
-      console.log(order);
       
       return order;
     }
@@ -586,8 +585,8 @@ class OrderService {
           bids_count: bids.length
         },
         records: {
-          asks: asks.slice(offset, limit),
-          bids: bids.slice(offset, limit),
+          asks: [...asks].reverse().slice(offset, limit),
+          bids: [...bids].reverse().slice(offset, limit),
         }
       };
     }
