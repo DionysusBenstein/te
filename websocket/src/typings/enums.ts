@@ -4,6 +4,7 @@ export enum Method {
   ORDER_BOOK = 'order.book',
   ORDER_PENDING = 'order.pending',
   ORDER_FINISHED = 'order.finished',
+  ORDER_HISTORY = 'order.history',
   // Asset API
   BALANCE_QUERY = 'balance.query',
   BALANCE_HISTORY = 'balance.history',
@@ -29,7 +30,7 @@ export enum SocketEvent {
   PRICE = 'price',
   STATE = 'state',
   TODAY = 'today',
-  DEAL = 'deal',
+  DEAL = 'deals',
   ORDER = 'order',
   ASSET = 'asset',
   SUMMARY = 'summary',
@@ -38,5 +39,6 @@ export enum SocketEvent {
 export enum ResponseMessage {
   SUCCESS_SUB = 'Channel subscribed successfully',
   SUCCESS_UNSUB = 'Channel unsubscribed successfully',
+  UNSUCCESS_UNSUB = 'Subscribtion not found',
   SUCCESS_NOTIFY = 'Notification sent successfully',
 }
