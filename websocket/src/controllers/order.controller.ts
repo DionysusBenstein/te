@@ -1,4 +1,4 @@
-import { deasyncRequestHelper } from '../utils/deasync.util';
+import { rpcRequest } from "../utils/rpc.util";
 import { subscribeHelper, unsubscribeHelper } from '../utils/subscription.util';
 import { updateHelper } from '../utils/ws.util';
 import { KafkaTopic, Method, SocketEvent } from '../typings/enums';
@@ -12,24 +12,24 @@ const options: SubOptions = {
 };
 
 class OrderController implements IWsRpcController {
-  query(params: any) {
-    return deasyncRequestHelper(Method.ORDER_HISTORY, params, client);
+  async query(params: any) {
+    return await rpcRequest(Method.ORDER_HISTORY, params);
   }
 
-  history(params: any) {
-    return deasyncRequestHelper(Method.ORDER_FINISHED, params, client);
+  async history(params: any) {
+    return await rpcRequest(Method.ORDER_FINISHED, params);
   }
 
-  async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, params, ws, options);
+  subscribe(params: any, ws: any) {
+    return subscribeHelper.call(this, params, ws, options);
   }
 
   update(params: any, ws: any, wss: any): string {
     return updateHelper.call(this, params, ws, wss);
   }
 
-  unsubscribe(params: any, ws: any, wss: any): string {
-    return unsubscribeHelper.call(this, params, ws, wss, options);
+  unsubscribe(params: any, ws: any, wss: any) {
+    return unsubscribeHelper(params, ws, wss, options);
   }
 }
 

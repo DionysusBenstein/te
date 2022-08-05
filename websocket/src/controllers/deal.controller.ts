@@ -1,4 +1,4 @@
-import { deasyncRequestHelper } from '../utils/deasync.util';
+import { rpcRequest } from "../utils/rpc.util";
 import { subscribeHelper, unsubscribeHelper } from '../utils/subscription.util';
 import { updateHelper } from '../utils/ws.util';
 import { KafkaTopic, Method, SocketEvent } from '../typings/enums';
@@ -12,20 +12,20 @@ const options: SubOptions = {
 };
 
 class DealController implements IWsRpcController {
-  query(params: any) {
-    return deasyncRequestHelper(Method.MARKET_DEALS, params, client);
+  async query(params: any) {
+    return await rpcRequest(Method.MARKET_DEALS, params);
   }
 
-  async subscribe(params: any, ws: any) {
-    return await subscribeHelper.call(this, params, ws, options);
+  subscribe(params: any, ws: any) {
+    return subscribeHelper(params, ws, options);
   }
 
   update(params: any, ws: any, wss: any): string {
     return updateHelper.call(this, params, ws, wss);
   }
 
-  unsubscribe(params: any, ws: any, wss: any): string {
-    return unsubscribeHelper.call(this, params, ws, wss, options);
+  unsubscribe(params: any, ws: any, wss: any) {
+    return unsubscribeHelper(params, ws, wss, options);
   }
 }
 

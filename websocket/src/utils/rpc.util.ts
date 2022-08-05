@@ -1,4 +1,5 @@
 import _ from "lodash";
+import client from '../config/router.config';
 
 export function collapse(obj: any) {
   const constructed = {};
@@ -9,4 +10,10 @@ export function collapse(obj: any) {
     });
   });
   return constructed;
+}
+
+export async function rpcRequest(method: string, params: any) {
+  return new Promise(resolve => {
+    client.request(method, params, (err: any, { result }) => resolve(result || err));
+  });
 }
