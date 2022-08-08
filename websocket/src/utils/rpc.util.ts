@@ -14,6 +14,9 @@ export function collapse(obj: any) {
 
 export async function rpcRequest(method: string, params: any) {
   return new Promise(resolve => {
-    client.request(method, params, (err: any, { result }) => resolve(result || err));
+    client.request(method, params, (err, error, result) => {
+      if (err) console.log(err);
+      resolve(result);
+    });
   });
 }
