@@ -88,6 +88,7 @@ class OrderService {
   }
 
   addAskOrder(order: Order) {
+    if (!order) return;
     const { asks }: Market = this.getMarketByName(order.market);
     asks.push(order);
 
@@ -103,6 +104,7 @@ class OrderService {
   }
 
   addBidOrder(order: Order) {
+    if (!order) return;
     const { bids }: Market = this.getMarketByName(order.market);
     bids.push(order);
 
@@ -135,8 +137,10 @@ class OrderService {
 
         if (remainBidOrderAmount >= remainOrderAmount) {
           order.filled_qty += remainOrderAmount;
+          order.change_qty = remainOrderAmount;
           order.executed_total = order.filled_qty * order.price;
           bidOrder.filled_qty += remainOrderAmount;
+          bidOrder.change_qty = remainOrderAmount;
           bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
           if (bidOrder.amount === bidOrder.filled_qty) {
@@ -160,8 +164,10 @@ class OrderService {
 
         if (remainBidOrderAmount < remainOrderAmount) {
           order.filled_qty += remainBidOrderAmount;
+          order.change_qty = remainBidOrderAmount;
           order.executed_total = order.filled_qty * order.price;
           bidOrder.filled_qty += remainOrderAmount;
+          bidOrder.change_qty = remainOrderAmount;
           bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
           const [dealOrder] = bids.splice(i, 1);
@@ -200,8 +206,10 @@ class OrderService {
 
         if (remainAskOrderAmount >= remainOrderAmount) {
           order.filled_qty += remainOrderAmount;
+          order.change_qty = remainOrderAmount;
           order.executed_total = order.filled_qty * order.price;
           askOrder.filled_qty += remainOrderAmount;
+          askOrder.change_qty = remainOrderAmount;
           askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
           if (askOrder.amount === askOrder.filled_qty) {
@@ -225,8 +233,10 @@ class OrderService {
 
         if (remainAskOrderAmount < remainOrderAmount) {
           order.filled_qty += remainAskOrderAmount;
+          order.change_qty = remainAskOrderAmount;
           order.executed_total = order.filled_qty * order.price;
           askOrder.filled_qty += remainOrderAmount;
+          askOrder.change_qty = remainOrderAmount;
           askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
           const [dealOrder] = asks.splice(i, 1);
@@ -418,6 +428,7 @@ class OrderService {
       price: pricePrec,
       amount,
       filled_qty: 0,
+      change_qty: 0,
       total,
       executed_total: 0,
       status: OrderStatus.ACTIVE,

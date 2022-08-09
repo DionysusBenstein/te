@@ -14,6 +14,7 @@ export type Order = {
   price?: number;
   amount: number;
   filled_qty: number;
+  change_qty?: number;
   total?: number;
   executed_total?: number;
   total_fee: number;
