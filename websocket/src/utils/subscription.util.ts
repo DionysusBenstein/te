@@ -30,7 +30,9 @@ export async function subscribeHelper(params: any, socket: any, options: SubOpti
   }
 
   console.log(
-    `\nAdd subscribtion: ${channelString}\nClient: ${socket.id}\nRoom: ${foundRoom ? foundRoom.name : room.name}\n`
+    `\nAdd subscribtion: ${channelString}`,
+    `\nClient: ${socket.id}\n${JSON.stringify(socket.handshake.auth)}`,
+    `\nRoom: ${foundRoom ? foundRoom.name : room.name}\n`
   );
 
   return {
@@ -65,7 +67,9 @@ export function unsubscribeHelper(params: any, socket: any, io: any, options: Su
     }
 
     console.log(
-      `\nRemove subscribtion: ${channelString}\nClient: ${socket.id}\nRoom: ${roomName}\n`
+      `\nRemove subscribtion: ${channelString}`,
+      `\nClient: ${socket.id}\n${JSON.stringify(socket.handshake.auth)}`,
+      `\nRoom: ${roomName}\n`
     );
 
     return { message: ResponseMessage.SUCCESS_UNSUB };

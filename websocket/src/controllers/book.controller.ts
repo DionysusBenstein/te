@@ -4,7 +4,6 @@ import { updateHelper } from '../utils/ws.util';
 import { KafkaTopic, Method, SocketEvent } from '../typings/enums';
 import { IWsRpcController } from '../typings/interfaces';
 import { SubOptions } from '../typings/types';
-import client from '../config/router.config';
 
 const options: SubOptions = {
   topics: [KafkaTopic.ORDERS, KafkaTopic.DEALS],

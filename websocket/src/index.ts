@@ -1,6 +1,7 @@
 import express from 'express';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { methods } from './rpc';
 import { roomsList } from './shared-data';
 import { getAllRooms } from './utils/ws.util';
@@ -15,6 +16,16 @@ const io = new Server(server, {
   cors: {
     origin: '*',
   }
+});
+
+// const rateLimiter = new RateLimiterMemory({
+//   points: 50,
+//   duration: 0.1,
+// });
+
+const rateLimiter = new RateLimiterMemory({
+  points: 50,
+  duration: 1,
 });
 
 const collapsedMethods = collapse(methods)
@@ -47,12 +58,20 @@ async function handleMessage(rawData: any) {
     const { method, params } = rawData;
 
     if (method && params) {
+      const rateLimiterRes = await rateLimiter.consume(this.id);
       const [route, name] = method.split('.');
       const eventName = name === 'query' ? method : 'message';
+      console.log('::::::: eventName', method, ':', rateLimiterRes);
+      
       return this.emit(eventName, JSON.stringify(await collapsedMethods[method](params, this, io)));
     }
   } catch (e) {
     this.send('Invalid method');
+
+    if (e.BeforeNext) {
+      this.emit('blocked', { 'retry-ms': e.msBeforeNext })
+    }
+
     console.log(e);
   }
 }
