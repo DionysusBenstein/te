@@ -5,7 +5,6 @@ import {
   IsString,
   IsNotEmpty,
   IsUUID,
-  IsIn,
   Min,
   IsOptional
 } from 'class-validator';
@@ -20,7 +19,8 @@ export class OrderHistoryParams {
   @Expose()
   @IsString()
   @IsNotEmpty()
-  market: string;
+  @IsOptional()
+  market?: string;
 
   @Expose()
   @IsInt()
