@@ -8,7 +8,7 @@ export const redisClient = createClient({
   // }
 });
 
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
+redisClient.on('error', (err:any) => console.log('Redis Client Error', err));
 
 try {
   redisClient.connect().then(() => console.log('✅ Connected to Redis'));
@@ -29,6 +29,9 @@ export const sequelize = new Sequelize('globiance_prod', 'globiance_prod', '!G05
       }
     }
   },
+  retry:{
+    max: 999
+  },
   pool: {
     max: 500,
     min: 0,
@@ -39,7 +42,9 @@ export const sequelize = new Sequelize('globiance_prod', 'globiance_prod', '!G05
 });
 
 try {
-  sequelize.authenticate().then(() => console.log('✅ Connected to MSSQL'));
+  sequelize.authenticate()
+    .then(() => console.log('✅ Connected to MSSQL'))
+    .catch(()=>console.log("Error occured with mssql"));
 } catch (err) {
   console.log(err);
 }
