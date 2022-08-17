@@ -149,7 +149,9 @@ export class MarketService {
       const percentChange: number = -(100 - status.close / status.open * 100).toFixed(3) || 0;
       const change24h: number = status.close - status.open || 0;
       const change: number = status.last - status.prev || 0;
-      const colour: string = change > 0 ? 'green' : change < 0 ? 'red' : 'white';
+      const colour: string = change == 0 ? 'white'  : change > 0 ? 'green' :'red';
+      const high: number = (status.high == 1 && status.low == 1) ? status.last : status.high;
+      const low: number = (status.high == 1 && status.low == 1) ? status.last : status.low; 
 
       return {
         pairId: market.pairId,
@@ -162,7 +164,9 @@ export class MarketService {
         usdPrice: parseFloat((status.last * usdPrice).toFixed(2)),
         xdcPrice: 0,
         favStatus: 'inActive',
-        ...status
+        ...status,
+        high,
+        low
       }
     }));
 
