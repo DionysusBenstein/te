@@ -276,8 +276,10 @@ class OrderService {
 
         order.price += pricePrec;
         order.filled_qty += remainOrderAmount;
+        order.change_qty = remainOrderAmount;
         order.executed_total = order.price * order.filled_qty;
         bidOrder.filled_qty += remainOrderAmount;
+        bidOrder.change_qty = remainOrderAmount;
         bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
         if (bidOrder.amount === bidOrder.filled_qty) {
@@ -305,8 +307,10 @@ class OrderService {
 
         order.price += pricePrec;
         order.filled_qty += remainBidOrderAmount;
+        order.change_qty = remainBidOrderAmount;
         order.executed_total = order.price * order.filled_qty;
         bidOrder.filled_qty += remainOrderAmount;
+        bidOrder.change_qty = remainOrderAmount;
         bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
         const [dealOrder] = bids.splice(i, 1);
@@ -345,8 +349,10 @@ class OrderService {
 
         order.price += pricePrec;
         order.filled_qty += remainOrderAmount;
+        order.change_qty = remainOrderAmount;
         order.executed_total = order.price * order.filled_qty;
         askOrder.filled_qty += remainOrderAmount;
+        askOrder.change_qty = remainOrderAmount;
         askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
         if (askOrder.amount === askOrder.filled_qty) {
@@ -374,8 +380,10 @@ class OrderService {
 
         order.price += pricePrec;
         order.filled_qty += remainAskOrderAmount;
+        order.change_qty = remainAskOrderAmount;
         order.executed_total = order.price * order.filled_qty;
         askOrder.filled_qty += remainOrderAmount;
+        askOrder.change_qty = remainOrderAmount;
         askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
         const [dealOrder] = asks.splice(i, 1);
