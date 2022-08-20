@@ -10,7 +10,7 @@ import config from '../config/marketprice.config';
 export async function marketUpdate(dealInfo: any) {
   const { timeframes } = config;
   const deal: Deal = {
-    id: uuidv4(),
+    id: dealInfo.id,
     type: dealInfo.side,
     price: dealInfo.price,
     amount: dealInfo.amount,
