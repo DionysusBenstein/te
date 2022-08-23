@@ -6,6 +6,7 @@ export const redirects = {
     query: redirect(services.matchengine),
     update: redirect(services.matchengine),
     history: redirect(services.readhistory),
+    webhook: redirect(services.matchengine),
   },
   asset: {
     list: redirect(services.matchengine),

@@ -247,6 +247,35 @@ class Queries {
       return err;
     }
   }
+
+  async appendWebhookHistory({ deal_id, api_error, time, error }) {
+    try {
+      const queryString: string = `
+        INSERT INTO webhook_histor (deal_id, api_error, error, time)
+        VALUES ($1, $2, $3, $4)
+      `;
+
+      pool.query(queryString, [deal_id, api_error, error, time])
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async findDealById({ id }) {
+    try {
+      const queryString: string = `
+        SELECT *
+        FROM deal_history
+        WHERE id = $1
+      `;
+
+      const response = await pool.query(queryString, [id]);
+      return { deal: response.rows[0] };
+    } catch (err) {
+      console.log(err);
+      return { err };
+    }
+  }
 }
 
 export default new Queries();

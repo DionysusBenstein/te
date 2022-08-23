@@ -4,6 +4,8 @@ import { getCurrentTimestamp } from '../utils/time.util';
 import { getAssetConfigByName } from '../utils/config.util';
 import { Balance } from '../typings/types';
 import db from '../database/queries';
+import kafkaProducer from '../kafka/kafka.producer';
+import {  KafkaTopic, OrderEvent } from '../typings/enums';
 
 class BalanceService {
   idStart: number;
@@ -63,6 +65,28 @@ class BalanceService {
     await db.appendBalanceHistory(newBalance);
 
     return { new_balance: newBalance };
+  }
+
+  async handleWebhook({ dealId, error }) {
+    let dbError = null;
+    
+    if (error) {
+      const response = await db.findDealById({ id: dealId });
+
+      if (response.err) {
+        dbError = response.err;
+      } else {
+        const { deal } = response;
+
+        kafkaProducer.pushMessage(
+          KafkaTopic.DEALS,
+          OrderEvent.FINISH,
+          deal
+        );
+      }
+    }
+
+    db.appendWebhookHistory({ deal_id: dealId, api_error: error, time: getCurrentTimestamp(), error: dbError });
   }
 }
 
