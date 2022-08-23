@@ -35,6 +35,12 @@ class BalanceController {
 
     return await balanceService.update(data);
   }
+
+  async webhook(params) {
+    const { dealId, error } = params;
+
+    balanceService.handleWebhook({ dealId, error });
+  }
 }
 
 export default new BalanceController();
