@@ -251,7 +251,7 @@ class Queries {
   async appendWebhookHistory({ deal_id, api_error, time, error }) {
     try {
       const queryString: string = `
-        INSERT INTO webhook_histor (deal_id, api_error, error, time)
+        INSERT INTO webhook_history (deal_id, api_error, error, time)
         VALUES ($1, $2, $3, $4)
       `;
 
