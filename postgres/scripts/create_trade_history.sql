@@ -53,3 +53,11 @@ CREATE TABLE balance_history (
     "detail"         TEXT NOT NULL,
     "time"           TIMESTAMP NOT NULL
 );
+
+CREATE TABLE webhook_history (
+    "deal_id"        uuid NOT NULL,
+    "api_error"      TEXT,
+    "error"          TEXT,
+    "time"           TIMESTAMP NOT NULL,
+    CONSTRAINT "webhook_pk" PRIMARY KEY ("deal_id", "time")
+)
