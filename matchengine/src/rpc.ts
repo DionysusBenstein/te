@@ -27,6 +27,10 @@ export const methods = {
     async update(args, callback) {
       callback(null, await balanceController.update(args));
     },
+
+    async webhook(args, callback) {
+      callback(null, await balanceController.webhook(args));
+    }
   },
 
   order: {
