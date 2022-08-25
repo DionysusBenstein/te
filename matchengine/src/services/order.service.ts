@@ -417,7 +417,7 @@ class OrderService {
     create_time,
     update_time
   }: PutLimitParams): Promise<Order> {
-    const precision = 10 ** getAssetConfigByName(money).prec;
+    const precision = 10 ** getAssetConfigByName(stock).prec;
     const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
     const total = amount * pricePrec;
     create_time = create_time || getCurrentTimestamp();
@@ -446,6 +446,7 @@ class OrderService {
       create_time,
       update_time: update_time === 'infinity' ? getCurrentTimestamp() : update_time
     };
+    console.log(order);
 
     db.appendOrderHistory(order);
 
