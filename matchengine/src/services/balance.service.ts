@@ -5,7 +5,7 @@ import { getAssetConfigByName } from '../utils/config.util';
 import { Balance } from '../typings/types';
 import db from '../database/queries';
 import kafkaProducer from '../kafka/kafka.producer';
-import {  KafkaTopic, OrderEvent } from '../typings/enums';
+import { KafkaTopic, OrderEvent } from '../typings/enums';
 
 class BalanceService {
   idStart: number;
@@ -69,7 +69,7 @@ class BalanceService {
 
   async handleWebhook({ dealId, error }) {
     let dbError = null;
-    
+
     if (error) {
       const response = await db.findDealById({ id: dealId });
 
@@ -86,7 +86,12 @@ class BalanceService {
       }
     }
 
-    db.appendWebhookHistory({ deal_id: dealId, api_error: error, time: getCurrentTimestamp(), error: dbError });
+    db.appendWebhookHistory({
+      deal_id: dealId,
+      api_error: error,
+      time: getCurrentTimestamp(),
+      error: dbError
+    });
   }
 }
 
