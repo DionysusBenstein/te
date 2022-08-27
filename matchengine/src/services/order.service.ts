@@ -4,6 +4,7 @@ import db from '../database/queries';
 import { getCurrentTimestamp } from '../utils/time.util';
 import kafkaProducer from '../kafka/kafka.producer';
 import { Market, Order, Deal, MatchEngineConfig } from '../typings/types';
+import AwaitLock from 'await-lock';
 import {
   appendOrderDeal,
   getAllPending,
@@ -32,11 +33,13 @@ class OrderService {
   marketList: Market[] = [];
   // NOTE: this is property for testing
   settleBookSize: number;
+  lock: AwaitLock;
 
   constructor(config: MatchEngineConfig) {
     for (const marketConf of config.markets) {
       const { name, stock, money } = marketConf;
       this.settleBookSize = 0;
+      this.lock = new AwaitLock();
 
       const asks = [];
       const bids = [];
@@ -120,30 +123,181 @@ class OrderService {
   }
 
   async executeAskLimitOrder(order: Order) {
-    const { bids }: Market = this.getMarketByName(order.market);
-    const n: number = bids.length;
-    let dealOrderList: Order[] = [];
+    await this.lock.acquireAsync();
+    try {
+      const { bids }: Market = this.getMarketByName(order.market);
+      const n: number = bids.length;
+      let dealOrderList: Order[] = [];
 
-    if (n !== 0 && bids[n - 1].price >= order.price) {
-      for (let i = n - 1; i >= 0; i--) {
-        let bidOrder = bids[i];
+      if (n !== 0 && bids[n - 1].price >= order.price) {
+        for (let i = n - 1; i >= 0; i--) {
+            let bidOrder = bids[i];
 
-        if (bidOrder.price < order.price) {
-          break;
+            if (bidOrder.price < order.price) {
+              break;
+            }
+
+            let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
+            let remainOrderAmount: number = order.amount - order.filled_qty;
+
+            if (remainBidOrderAmount >= remainOrderAmount) {
+              order.filled_qty += remainOrderAmount;
+              order.change_qty = remainOrderAmount;
+              order.executed_total = order.filled_qty * order.price;
+              bidOrder.filled_qty += remainOrderAmount;
+              bidOrder.change_qty = remainOrderAmount;
+              bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
+
+              if (bidOrder.amount <= bidOrder.filled_qty) {
+                  bidOrder.status = OrderStatus.COMPLETED;
+                  const [dealOrder] = bids.splice(i, 1);
+                  dealOrderList.push(dealOrder);
+                  await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
+              } else {
+                  bidOrder.status = OrderStatus.PARTIALLY;
+                  const [dealOrder] = bids.slice(i, i + 1);
+                  dealOrderList.push(dealOrder);
+                  await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
+              }
+
+              order.status = OrderStatus.COMPLETED;
+
+              await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+              await updateOrderHistory(order, bidOrder);
+              return dealOrderList;
+            }
+
+            if (remainBidOrderAmount < remainOrderAmount) {
+              order.filled_qty += remainBidOrderAmount;
+              order.change_qty = remainBidOrderAmount;
+              order.executed_total = order.filled_qty * order.price;
+              bidOrder.filled_qty += remainBidOrderAmount;
+              bidOrder.change_qty = remainBidOrderAmount;
+              bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
+
+              const [dealOrder] = bids.splice(i, 1);
+              dealOrderList.push(dealOrder);
+              order.status = OrderStatus.PARTIALLY;
+              bidOrder.status = OrderStatus.COMPLETED;
+
+              await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, order);
+              await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
+
+              await updateOrderHistory(order, bidOrder);
+              continue;
+            }
+        }
+      }
+
+      this.addAskOrder(order);
+      return dealOrderList;
+    } finally {
+        this.lock.release();
+    }
+  }
+
+  async executeBidLimitOrder(order: Order) {
+    await this.lock.acquireAsync();
+    try {
+        const { asks }: Market = this.getMarketByName(order.market);
+        const n: number = asks.length;
+        let dealOrderList: Order[] = [];
+
+        if (n !== 0 && asks[n - 1].price <= order.price) {
+          for (let i = n - 1; i >= 0; i--) {
+              let askOrder = asks[i];
+
+              if (askOrder.price > order.price) {
+                break;
+              }
+
+              let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
+              let remainOrderAmount: number = order.amount - order.filled_qty;
+
+              if (remainAskOrderAmount >= remainOrderAmount) {
+                order.filled_qty += remainOrderAmount;
+                order.change_qty = remainOrderAmount;
+                order.executed_total = order.filled_qty * order.price;
+                askOrder.filled_qty += remainOrderAmount;
+                askOrder.change_qty = remainOrderAmount;
+                askOrder.executed_total = askOrder.filled_qty * askOrder.price;
+
+                if (askOrder.amount <= askOrder.filled_qty) {
+                  askOrder.status = OrderStatus.COMPLETED;
+                  const [dealOrder] = asks.splice(i, 1);
+                  dealOrderList.push(dealOrder);
+                  await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+                } else {
+                  askOrder.status = OrderStatus.PARTIALLY;
+                  const [dealOrder] = asks.slice(i, i + 1);
+                  dealOrderList.push(dealOrder)
+                  await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, askOrder);
+                }
+
+                order.status = OrderStatus.COMPLETED;
+                await updateOrderHistory(order, askOrder);
+                await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+
+                return dealOrderList;
+              }
+
+              if (remainAskOrderAmount < remainOrderAmount) {
+                order.filled_qty += remainAskOrderAmount;
+                order.change_qty = remainAskOrderAmount;
+                order.executed_total = order.filled_qty * order.price;
+                askOrder.filled_qty += remainAskOrderAmount;
+                askOrder.change_qty = remainAskOrderAmount;
+                askOrder.executed_total = askOrder.filled_qty * askOrder.price;
+
+                const [dealOrder] = asks.splice(i, 1);
+                dealOrderList.push(dealOrder);
+                order.status = OrderStatus.PARTIALLY;
+                askOrder.status = OrderStatus.COMPLETED;
+
+                await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, order);
+                await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, askOrder);
+
+                await updateOrderHistory(order, askOrder);
+                continue;
+              }
+          }
         }
 
+        this.addBidOrder(order);
+        return dealOrderList;
+    } finally {
+        this.lock.release();
+    }
+  }
+
+  // NOTE: strongly needs to refactor
+  async executeAskMarketOrder(order: Order) {
+    await this.lock.acquireAsync();
+    try {
+      const { bids }: Market = this.getMarketByName(order.market);
+      const n: number = bids.length;
+      let dealOrderList: Order[] = [];
+
+      const precision = 10 ** getAssetConfigByName(order.money).prec;
+
+      for (let i = n - 1; i >= 0; i--) {
+        let bidOrder = bids[i];
         let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
         let remainOrderAmount: number = order.amount - order.filled_qty;
 
         if (remainBidOrderAmount >= remainOrderAmount) {
+          const price = remainOrderAmount * bidOrder.price / order.amount;
+          const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+          order.price += pricePrec;
           order.filled_qty += remainOrderAmount;
           order.change_qty = remainOrderAmount;
-          order.executed_total = order.filled_qty * order.price;
+          order.executed_total = order.price * order.filled_qty;
           bidOrder.filled_qty += remainOrderAmount;
           bidOrder.change_qty = remainOrderAmount;
           bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
-          if (bidOrder.amount === bidOrder.filled_qty) {
+          if (bidOrder.amount <= bidOrder.filled_qty) {
             bidOrder.status = OrderStatus.COMPLETED;
             const [dealOrder] = bids.splice(i, 1);
             dealOrderList.push(dealOrder);
@@ -159,15 +313,19 @@ class OrderService {
 
           await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
           await updateOrderHistory(order, bidOrder);
-          return dealOrderList;
+          return { dealOrderList, order };
         }
 
         if (remainBidOrderAmount < remainOrderAmount) {
+          const price = remainBidOrderAmount * bidOrder.price / order.amount;
+          const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+          order.price += pricePrec;
           order.filled_qty += remainBidOrderAmount;
           order.change_qty = remainBidOrderAmount;
-          order.executed_total = order.filled_qty * order.price;
-          bidOrder.filled_qty += remainOrderAmount;
-          bidOrder.change_qty = remainOrderAmount;
+          order.executed_total = order.price * order.filled_qty;
+          bidOrder.filled_qty += remainBidOrderAmount;
+          bidOrder.change_qty = remainBidOrderAmount;
           bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
 
           const [dealOrder] = bids.splice(i, 1);
@@ -182,37 +340,42 @@ class OrderService {
           continue;
         }
       }
-    }
 
-    this.addAskOrder(order);
-    return dealOrderList;
+      this.addAskOrder(order);
+      return { dealOrderList, order };
+    } finally {
+      this.lock.release();
+    }
   }
 
-  async executeBidLimitOrder(order: Order) {
-    const { asks }: Market = this.getMarketByName(order.market);
-    const n: number = asks.length;
-    let dealOrderList: Order[] = [];
+  // NOTE: strongly needs to refactor
+  async executeBidMarketOrder(order: Order) {
+    await this.lock.acquireAsync();
+    try {
+      const { asks }: Market = this.getMarketByName(order.market);
+      const n: number = asks.length;
+      let dealOrderList: Order[] = [];
 
-    if (n !== 0 && asks[n - 1].price <= order.price) {
+      const precision = 10 ** getAssetConfigByName(order.money).prec;
+
       for (let i = n - 1; i >= 0; i--) {
         let askOrder = asks[i];
-
-        if (askOrder.price > order.price) {
-          break;
-        }
-
         let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
         let remainOrderAmount: number = order.amount - order.filled_qty;
 
         if (remainAskOrderAmount >= remainOrderAmount) {
+          const price = remainOrderAmount * askOrder.price / order.amount;
+          const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+          order.price += pricePrec;
           order.filled_qty += remainOrderAmount;
           order.change_qty = remainOrderAmount;
-          order.executed_total = order.filled_qty * order.price;
+          order.executed_total = order.price * order.filled_qty;
           askOrder.filled_qty += remainOrderAmount;
           askOrder.change_qty = remainOrderAmount;
           askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
-          if (askOrder.amount === askOrder.filled_qty) {
+          if (askOrder.amount <= askOrder.filled_qty) {
             askOrder.status = OrderStatus.COMPLETED;
             const [dealOrder] = asks.splice(i, 1);
             dealOrderList.push(dealOrder);
@@ -228,15 +391,19 @@ class OrderService {
           await updateOrderHistory(order, askOrder);
           await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
 
-          return dealOrderList;
+          return { dealOrderList, order };
         }
 
         if (remainAskOrderAmount < remainOrderAmount) {
+          const price = remainAskOrderAmount * askOrder.price / order.amount;
+          const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+
+          order.price += pricePrec;
           order.filled_qty += remainAskOrderAmount;
           order.change_qty = remainAskOrderAmount;
-          order.executed_total = order.filled_qty * order.price;
-          askOrder.filled_qty += remainOrderAmount;
-          askOrder.change_qty = remainOrderAmount;
+          order.executed_total = order.price * order.filled_qty;
+          askOrder.filled_qty += remainAskOrderAmount;
+          askOrder.change_qty = remainAskOrderAmount;
           askOrder.executed_total = askOrder.filled_qty * askOrder.price;
 
           const [dealOrder] = asks.splice(i, 1);
@@ -251,156 +418,12 @@ class OrderService {
           continue;
         }
       }
+
+      this.addBidOrder(order);
+      return { dealOrderList, order };
+    } finally {
+      this.lock.release();
     }
-
-    this.addBidOrder(order);
-    return dealOrderList;
-  }
-
-  // NOTE: strongly needs to refactor
-  async executeAskMarketOrder(order: Order) {
-    const { bids }: Market = this.getMarketByName(order.market);
-    const n: number = bids.length;
-    let dealOrderList: Order[] = [];
-
-    const precision = 10 ** getAssetConfigByName(order.money).prec;
-
-    for (let i = n - 1; i >= 0; i--) {
-      let bidOrder = bids[i];
-      let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
-      let remainOrderAmount: number = order.amount - order.filled_qty;
-
-      if (remainBidOrderAmount >= remainOrderAmount) {
-        const price = remainOrderAmount * bidOrder.price / order.amount;
-        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
-
-        order.price += pricePrec;
-        order.filled_qty += remainOrderAmount;
-        order.change_qty = remainOrderAmount;
-        order.executed_total = order.price * order.filled_qty;
-        bidOrder.filled_qty += remainOrderAmount;
-        bidOrder.change_qty = remainOrderAmount;
-        bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
-
-        if (bidOrder.amount === bidOrder.filled_qty) {
-          bidOrder.status = OrderStatus.COMPLETED;
-          const [dealOrder] = bids.splice(i, 1);
-          dealOrderList.push(dealOrder);
-          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
-        } else {
-          bidOrder.status = OrderStatus.PARTIALLY;
-          const [dealOrder] = bids.slice(i, i + 1);
-          dealOrderList.push(dealOrder);
-          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
-        }
-
-        order.status = OrderStatus.COMPLETED;
-
-        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
-        await updateOrderHistory(order, bidOrder);
-        return { dealOrderList, order };
-      }
-
-      if (remainBidOrderAmount < remainOrderAmount) {
-        const price = remainBidOrderAmount * bidOrder.price / order.amount;
-        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
-
-        order.price += pricePrec;
-        order.filled_qty += remainBidOrderAmount;
-        order.change_qty = remainBidOrderAmount;
-        order.executed_total = order.price * order.filled_qty;
-        bidOrder.filled_qty += remainOrderAmount;
-        bidOrder.change_qty = remainOrderAmount;
-        bidOrder.executed_total = bidOrder.filled_qty * bidOrder.price;
-
-        const [dealOrder] = bids.splice(i, 1);
-        dealOrderList.push(dealOrder);
-        order.status = OrderStatus.PARTIALLY;
-        bidOrder.status = OrderStatus.COMPLETED;
-
-        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, order);
-        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
-
-        await updateOrderHistory(order, bidOrder);
-        continue;
-      }
-    }
-
-    this.addAskOrder(order);
-    return { dealOrderList, order };
-  }
-
-  // NOTE: strongly needs to refactor
-  async executeBidMarketOrder(order: Order) {
-    const { asks }: Market = this.getMarketByName(order.market);
-    const n: number = asks.length;
-    let dealOrderList: Order[] = [];
-
-    const precision = 10 ** getAssetConfigByName(order.money).prec;
-
-    for (let i = n - 1; i >= 0; i--) {
-      let askOrder = asks[i];
-      let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
-      let remainOrderAmount: number = order.amount - order.filled_qty;
-
-      if (remainAskOrderAmount >= remainOrderAmount) {
-        const price = remainOrderAmount * askOrder.price / order.amount;
-        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
-
-        order.price += pricePrec;
-        order.filled_qty += remainOrderAmount;
-        order.change_qty = remainOrderAmount;
-        order.executed_total = order.price * order.filled_qty;
-        askOrder.filled_qty += remainOrderAmount;
-        askOrder.change_qty = remainOrderAmount;
-        askOrder.executed_total = askOrder.filled_qty * askOrder.price;
-
-        if (askOrder.amount === askOrder.filled_qty) {
-          askOrder.status = OrderStatus.COMPLETED;
-          const [dealOrder] = asks.splice(i, 1);
-          dealOrderList.push(dealOrder);
-          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
-        } else {
-          askOrder.status = OrderStatus.PARTIALLY;
-          const [dealOrder] = asks.slice(i, i + 1);
-          dealOrderList.push(dealOrder)
-          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, askOrder);
-        }
-
-        order.status = OrderStatus.COMPLETED;
-        await updateOrderHistory(order, askOrder);
-        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
-
-        return { dealOrderList, order };
-      }
-
-      if (remainAskOrderAmount < remainOrderAmount) {
-        const price = remainAskOrderAmount * askOrder.price / order.amount;
-        const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
-
-        order.price += pricePrec;
-        order.filled_qty += remainAskOrderAmount;
-        order.change_qty = remainAskOrderAmount;
-        order.executed_total = order.price * order.filled_qty;
-        askOrder.filled_qty += remainOrderAmount;
-        askOrder.change_qty = remainOrderAmount;
-        askOrder.executed_total = askOrder.filled_qty * askOrder.price;
-
-        const [dealOrder] = asks.splice(i, 1);
-        dealOrderList.push(dealOrder);
-        order.status = OrderStatus.PARTIALLY;
-        askOrder.status = OrderStatus.COMPLETED;
-
-        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, order);
-        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, askOrder);
-
-        await updateOrderHistory(order, askOrder);
-        continue;
-      }
-    }
-
-    this.addBidOrder(order);
-    return { dealOrderList, order };
   }
 
   async putLimit({
@@ -448,7 +471,7 @@ class OrderService {
     };
     console.log(order);
 
-    db.appendOrderHistory(order);
+    await db.appendOrderHistory(order);
 
     let dealOrderList: Order[] = [];
     if (side === OrderSide.ASK) {

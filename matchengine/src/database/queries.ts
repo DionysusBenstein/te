@@ -48,7 +48,8 @@ class Queries {
           "deal_stock",
           "total_fee",
           "create_time",
-          "update_time"
+          "update_time",
+          "debug_version"
         )
         VALUES            
           (
@@ -71,7 +72,8 @@ class Queries {
             ${deal_stock},
             ${total_fee},
             '${create_time}',
-            '${update_time}'
+            '${update_time}',
+            1
           )`;
 
       const response: QueryResult = await pool.query(queryString);
