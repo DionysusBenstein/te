@@ -3,7 +3,7 @@ import marketController from './controllers/market.controller';
 import balanceController from './controllers/balance.controller';
 import orderController from './controllers/order.controller';
 import orderService from './services/order.service';
-import { transfer } from './database/transfer_data';
+import { recreateOrders } from './database/recreate_orders';
 
 export const methods = {
   asset: {
@@ -75,7 +75,7 @@ export const methods = {
 
   transfer: {
     async data(args, callback) {
-      callback(null, await transfer());
+      callback(null, await recreateOrders(args));
     }
   }
 };
