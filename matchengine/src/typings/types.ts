@@ -43,6 +43,8 @@ export type Deal = {
   deal: number;
   fee: number;
   deal_fee: number;
+  stock_usd_price: number;
+  money_usd_price: number;
   time: string;
 };
 

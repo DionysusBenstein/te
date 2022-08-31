@@ -2,6 +2,8 @@ export type Deal = {
   id: string;
   type: string;
   price: number;
+  stockUsdPrice: number;
+  moneyUsdPrice: number;
   amount: number;
   total: number;
   time: string;
@@ -15,6 +17,8 @@ export type MarketStatus = {
   high: number;
   low: number;
   volume: number;
+  stockUsdPrice: number;
+  moneyUsdPrice: number;
 };
 
 export type KlineInfo = {
