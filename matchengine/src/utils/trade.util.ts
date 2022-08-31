@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Deal, Market, Order } from '../typings/types';
 import { MarketRole, BusinessEnum } from '../typings/enums';
 import { getCurrentTimestamp } from './time.util';
+import { getAssetUsdPrice } from './price.util';
 
 export function getAllPending(marketList: Market[], user_id: string) {
   let userOrders: Order[];
@@ -56,6 +57,8 @@ export async function appendOrderDeal(
     deal: 1,
     fee: 1,
     deal_fee: 1,
+    stock_usd_price: await getAssetUsdPrice(order.stock),
+    money_usd_price: await getAssetUsdPrice(order.money),
     time: order.update_time,
   };
 
@@ -78,6 +81,8 @@ export async function appendOrderDeal(
     deal: 1,
     fee: 1,
     deal_fee: 1,
+    stock_usd_price: await getAssetUsdPrice(order.stock),
+    money_usd_price: await getAssetUsdPrice(order.money),
     time: dealOrder.update_time,
   };
 

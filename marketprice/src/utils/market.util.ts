@@ -13,6 +13,8 @@ export async function marketUpdate(dealInfo: any) {
     id: dealInfo.id,
     type: dealInfo.side,
     price: dealInfo.price,
+    stockUsdPrice: dealInfo.stock_usd_price,
+    moneyUsdPrice: dealInfo.money_usd_price,
     amount: dealInfo.amount,
     total: dealInfo.total,
     time: dealInfo.time,

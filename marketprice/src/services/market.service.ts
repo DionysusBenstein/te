@@ -1,4 +1,3 @@
-import { QueryTypes } from 'sequelize';
 import { MarketStatusTodayParams } from './../dto/market-status-today-params.dto';
 import { MarketStatusParams } from './../dto/market-status-params.dto';
 import { MarketDealsParams } from './../dto/market-deals-params.dto';
@@ -12,11 +11,9 @@ import config from '../config/marketprice.config';
 import client from '../config/router.config';
 import { deasyncRequestHelper } from '../utils/deasync.util';
 import { mergeKlineInfo } from '../utils/kline.util';
-import { sequelize, redisClient } from '../config/database.config';
+import { redisClient } from '../config/database.config';
 import kafkaConsumer from '../kafka/kafka.consumer';
 import { onOrderMessage } from '../utils/orderbook.util';
-
-const MSSERVER_MISSING_CURRENCY = { usdPrice: 0 };
 
 export class MarketService {
   constructor(private client: typeof redisClient) {
@@ -54,7 +51,7 @@ export class MarketService {
       prevDeal = lastDeal;
     }
 
-    const { price } = JSON.parse(lastDeal);
+    const { price, stockUsdPrice, moneyUsdPrice } = JSON.parse(lastDeal);
     const { price: prevPrice } = JSON.parse(prevDeal);
 
     const end = Date.now() / 1000;
@@ -78,6 +75,8 @@ export class MarketService {
       period,
       prev: prevPrice,
       last: price,
+      stockUsdPrice: stockUsdPrice || 0, 
+      moneyUsdPrice: moneyUsdPrice || 0, 
       ...singleKline,
     };
 
@@ -94,7 +93,9 @@ export class MarketService {
         last: 0,
         high: 0,
         low: 0,
-        volume: 0
+        volume: 0,
+        stockUsdPrice: 0,
+        moneyUsdPrice: 0
       }
       return defaultStatus;
     }
@@ -135,17 +136,6 @@ export class MarketService {
     const marketList: any = deasyncRequestHelper('market.list', {}, client);
     const marketSummary = Promise.all(marketList.map(async (market: any) => {
       const status: any = await this.getStatusToday({ market: market.name });
-      const usdPriceQueryResult: any = await sequelize.query(
-        'SELECT usdPrice from LivePrice WHERE currencyName = :market', {
-        replacements: {
-          market: market.money
-        },
-        plain: true,
-        raw: true,
-        type: QueryTypes.SELECT
-      });
-
-      const usdPrice: number = (usdPriceQueryResult || MSSERVER_MISSING_CURRENCY).usdPrice;
       const percentChange: number = -(100 - status.close / status.open * 100).toFixed(3) || 0;
       const change24h: number = status.close - status.open || 0;
       const change: number = status.last - status.prev || 0;
@@ -161,7 +151,8 @@ export class MarketService {
         change: parseFloat(change.toFixed(12)),
         colour,
         price: parseFloat(status.last.toFixed(12)),
-        usdPrice: parseFloat((status.last * usdPrice).toFixed(2)),
+        usdPrice: parseFloat((status.last * status.moneyUsdPrice).toFixed(2)),
+        moneyUsdPrice: parseFloat(status.moneyUsdPrice),
         xdcPrice: 0,
         favStatus: 'inActive',
         ...status,
