@@ -596,7 +596,9 @@ class OrderService {
   async cancel({ user_id, market, order_id, side }: CancelParams) {
     const removeOrder = async (user_id, order_id, orderbook): Promise<Order | void> => {
       let orderIndex: number = orderbook.findIndex(
-        (order) => order.id === order_id && order.user_id === user_id
+        (order) =>
+          order.id.toLowerCase() === order_id.toLowerCase()
+          && order.user_id.toLowerCase() === user_id.toLowerCase()
       );
 
       if (orderIndex >= 0) {
