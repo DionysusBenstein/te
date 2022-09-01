@@ -21,7 +21,8 @@ CREATE TABLE order_history (
     "deal_stock"     DECIMAL(38,12) NOT NULL,
 
     "create_time"    TIMESTAMP NOT NULL,
-    "update_time"    TIMESTAMP NOT NULL
+    "update_time"    TIMESTAMP NOT NULL,
+    "debug_version"  SMALLINT
 );
 
 CREATE TABLE deal_history (
