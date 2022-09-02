@@ -37,9 +37,9 @@ class BalanceController {
   }
 
   async webhook(params) {
-    const { dealId, error } = params;
+    const { dealInfo, error } = params;
 
-    await balanceService.handleWebhook({ dealId, error });
+    await balanceService.handleWebhook({ dealInfo, error });
   }
 }
 

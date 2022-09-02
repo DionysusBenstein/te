@@ -67,31 +67,36 @@ class BalanceService {
     return { new_balance: newBalance };
   }
 
-  async handleWebhook({ dealId, error }) {
-    let dbError = null;
+  async handleWebhook({ dealInfo, error }) {
+    try {
+      const deal = JSON.parse(dealInfo);
+      let dbError = null;
 
-    if (error) {
-      const response = await db.findDealById({ id: dealId });
+      if (error) {
+        const response = await db.findDealById({ id: deal.id });
 
-      if (response.err) {
-        dbError = response.err;
-      } else {
-        const { deal } = response;
+        if (response.err) {
+          dbError = response.err;
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 5000));
 
-        kafkaProducer.pushMessage(
-          KafkaTopic.DEALS,
-          OrderEvent.FINISH,
-          deal
-        );
+          kafkaProducer.pushMessage(
+            `${KafkaTopic.DEALS}-retry`,
+            OrderEvent.FINISH,
+            deal
+          );
+        }
       }
-    }
 
-    db.appendWebhookHistory({
-      deal_id: dealId,
-      api_error: error,
-      time: getCurrentTimestamp(),
-      error: dbError
-    });
+      db.appendWebhookHistory({
+        deal_id: deal.id,
+        api_error: error,
+        time: getCurrentTimestamp(),
+        error: dbError
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 
