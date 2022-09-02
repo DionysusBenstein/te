@@ -150,7 +150,7 @@ export class MarketService {
         change24h: parseFloat(change24h.toFixed(12)),
         change: parseFloat(change.toFixed(12)),
         colour,
-        price: parseFloat(status.last.toFixed(12)),
+        price: parseFloat(parseFloat(status.last).toFixed(12)),
         usdPrice: parseFloat((status.last * status.moneyUsdPrice).toFixed(2)),
         moneyUsdPrice: parseFloat(status.moneyUsdPrice),
         xdcPrice: 0,
