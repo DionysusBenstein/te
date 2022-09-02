@@ -94,6 +94,7 @@ export class MarketService {
         high: 0,
         low: 0,
         volume: 0,
+        volumeMoney: 0,
         stockUsdPrice: 0,
         moneyUsdPrice: 0
       }
@@ -152,16 +153,17 @@ export class MarketService {
         colour,
         price: parseFloat(parseFloat(status.last).toFixed(12)),
         usdPrice: parseFloat((status.last * status.moneyUsdPrice).toFixed(2)),
-        moneyUsdPrice: parseFloat(status.moneyUsdPrice),
         xdcPrice: 0,
         favStatus: 'inActive',
+        totalStock: status.volume,
+        totalMoney: status.volumeMoney,
+        totalUsd: status.volume * status.last * status.moneyUsdPrice,
         ...status,
         high,
         low
       }
     }));
 
-    
     if (market) {
       const [singleMarketSummary] = (await marketSummary).filter(
         (marketSummaryItem) => 

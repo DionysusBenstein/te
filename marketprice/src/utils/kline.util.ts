@@ -8,6 +8,7 @@ export function createKlineInfo(price: number, time?: any): KlineInfo {
     high: price,
     low: price,
     volume: 0,
+    volumeMoney: 0,
   };
 
   return kinfo;
@@ -16,9 +17,15 @@ export function createKlineInfo(price: number, time?: any): KlineInfo {
 export function updateKlineInfo(
   kinfo: KlineInfo,
   price: number,
-  amount: number
+  amount: number,
+  total: number
 ) {
+  if (!kinfo.volumeMoney) {
+    kinfo.volumeMoney = 0;
+  }
+
   kinfo.volume += amount;
+  kinfo.volumeMoney += total;
   kinfo.close = price;
 
   if (price > kinfo.high) {
@@ -38,7 +45,8 @@ export function mergeKlineInfo(klines: KlineInfo[]): KlineInfo {
       close: 1,
       high: 1,
       low: 1,
-      volume: 0
+      volume: 0,
+      volumeMoney: 0
     }
   }
 
@@ -48,11 +56,14 @@ export function mergeKlineInfo(klines: KlineInfo[]): KlineInfo {
     close: klines[klines.length - 1].close,
     high: 0,
     low: klines[0].low,
-    volume: 0
+    volume: 0,
+    volumeMoney: 0
   }
 
   return klines.reduce((acc: KlineInfo, kline: KlineInfo) => {
-    acc.volume += kline.volume;
+    acc.volume += kline.volume || 0;
+    acc.volumeMoney += kline.volumeMoney || 0;
+
     if (kline.high > acc.high) {
       acc.high = kline.high;
     }

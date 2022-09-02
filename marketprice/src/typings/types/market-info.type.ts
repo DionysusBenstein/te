@@ -17,6 +17,7 @@ export type MarketStatus = {
   high: number;
   low: number;
   volume: number;
+  volumeMoney: number;
   stockUsdPrice: number;
   moneyUsdPrice: number;
 };
@@ -28,4 +29,5 @@ export type KlineInfo = {
   high: number;
   low: number;
   volume: number;
+  volumeMoney: number;
 };

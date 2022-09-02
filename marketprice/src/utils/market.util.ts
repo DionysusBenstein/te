@@ -43,7 +43,7 @@ export async function marketUpdate(dealInfo: any) {
       // kinfo = createKlineInfo(deal.price, ktime);
     }
 
-    updateKlineInfo(kinfo, deal.price, deal.amount);
+    updateKlineInfo(kinfo, deal.price, deal.amount, deal.total);
     await redisClient.hSet(
       `k:${dealInfo.market}:${timeframe}`,
       unixTime,
