@@ -40,5 +40,8 @@ export const redirects = {
   },
   transfer: {
     data: redirect(services.matchengine)
+  },
+  debug: {
+    send_test_deal: redirect(services.matchengine)
   }
 } as const;

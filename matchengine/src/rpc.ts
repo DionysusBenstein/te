@@ -77,5 +77,11 @@ export const methods = {
     async data(args, callback) {
       callback(null, await recreateOrders(args));
     }
+  },
+
+  debug: {
+    async send_test_deal(args, callback) {
+      callback(null, await orderService.sendTestDeal(args));
+    }
   }
 };
