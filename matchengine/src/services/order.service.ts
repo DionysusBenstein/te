@@ -676,8 +676,10 @@ class OrderService {
     }
 
     const { asks, bids }: Market = this.getMarketByName(market);
-    const askOrders = asks.filter((order) => order.user_id == user_id);
-    const bidOrders = bids.filter((order) => order.user_id == user_id);
+    const askOrders = asks.filter((order) =>
+      order.user_id.toLowerCase() === user_id.toLowerCase());
+    const bidOrders = bids.filter((order) =>
+      order.user_id.toLowerCase() === user_id.toLowerCase());
     const userOrders = [...askOrders, ...bidOrders];
 
     return {
