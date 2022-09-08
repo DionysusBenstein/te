@@ -20,38 +20,52 @@ class OrderController {
   }
 
   async putLimit(params: PutLimitParams) {
-    const { data, errors } = await validateAndConvert(PutLimitParams, params);
+    try {
+      const { data, errors } = await validateAndConvert(PutLimitParams, params);
 
-    if (errors) {
+      if (errors) {
+        return {
+          errors,
+          message: 'Invalid params!',
+        };
+      }
+
+      const order: Order = await this.orderService.putLimit(data);
+
       return {
-        errors,
-        message: 'Invalid params!',
-      };
-    }
-
-    const order: Order = await this.orderService.putLimit(data);
-
-    return {
-      status: 'ok',
-      order
+        status: 'ok',
+        order
+      }
+    } catch (error) {
+      return {
+        status: 'error',
+        message: error.message
+      }
     }
   }
 
   async putMarket(params: PutMarketParams) {
-    const { data, errors } = await validateAndConvert(PutMarketParams, params);
+    try {
+      const { data, errors } = await validateAndConvert(PutMarketParams, params);
 
-    if (errors) {
+      if (errors) {
+        return {
+          errors,
+          message: 'Invalid params!',
+        };
+      }
+
+      const order: any = await this.orderService.putMarket(data);
+
       return {
-        errors,
-        message: 'Invalid params!',
-      };
-    }
-
-    const order: any = await this.orderService.putMarket(data);
-
-    return {
-      status: 'ok',
-      order
+        status: 'ok',
+        order
+      }
+    } catch (error) {
+      return {
+        status: 'error',
+        message: error.message
+      }
     }
   }
 
