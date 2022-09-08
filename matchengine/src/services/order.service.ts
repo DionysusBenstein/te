@@ -8,6 +8,7 @@ import AwaitLock from 'await-lock';
 import {
   appendOrderDeal,
   getAllPending,
+  updateUserBalances,
   updateOrderHistory,
 } from '../utils/trade.util';
 import {
@@ -142,6 +143,23 @@ class OrderService {
           let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
           let remainOrderAmount: number = order.amount - order.filled_qty;
 
+          const amount: number = remainBidOrderAmount >= remainOrderAmount ? remainOrderAmount : remainBidOrderAmount
+
+          await updateUserBalances({
+            user_id: order.user_id,
+            deal_user_id: bidOrder.user_id,
+            exchange_id: order.exchange_id,
+            exchange_name: order.exchange_name,
+            order_id: order.id,
+            deal_order_id: bidOrder.id,
+            stock: order.stock,
+            money: order.money,
+            side: order.side,
+            price: bidOrder.price,
+            amount,
+            total: amount * bidOrder.price,
+          });
+
           if (remainBidOrderAmount >= remainOrderAmount) {
             order.filled_qty += remainOrderAmount;
             order.change_qty = remainOrderAmount;
@@ -216,6 +234,23 @@ class OrderService {
           let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
           let remainOrderAmount: number = order.amount - order.filled_qty;
 
+          const amount: number = remainAskOrderAmount >= remainOrderAmount ? remainOrderAmount : remainAskOrderAmount;
+
+          await updateUserBalances({
+            user_id: order.user_id,
+            deal_user_id: askOrder.user_id,
+            exchange_id: order.exchange_id,
+            exchange_name: order.exchange_name,
+            order_id: order.id,
+            deal_order_id: askOrder.id,
+            stock: order.stock,
+            money: order.money,
+            side: order.side,
+            price: askOrder.price,
+            amount,
+            total: amount * askOrder.price,
+          });
+
           if (remainAskOrderAmount >= remainOrderAmount) {
             order.filled_qty += remainOrderAmount;
             order.change_qty = remainOrderAmount;
@@ -286,6 +321,23 @@ class OrderService {
         let bidOrder = bids[i];
         let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
         let remainOrderAmount: number = order.amount - order.filled_qty;
+
+        const amount: number = remainBidOrderAmount >= remainOrderAmount ? remainOrderAmount : remainBidOrderAmount
+
+        await updateUserBalances({
+          user_id: order.user_id,
+          deal_user_id: bidOrder.user_id,
+          exchange_id: order.exchange_id,
+          exchange_name: order.exchange_name,
+          order_id: order.id,
+          deal_order_id: bidOrder.id,
+          stock: order.stock,
+          money: order.money,
+          side: order.side,
+          price: bidOrder.price,
+          amount,
+          total: amount * bidOrder.price,
+        });
 
         if (remainBidOrderAmount >= remainOrderAmount) {
           const price = remainOrderAmount * bidOrder.price / order.amount;
@@ -364,6 +416,23 @@ class OrderService {
         let askOrder = asks[i];
         let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
         let remainOrderAmount: number = order.amount - order.filled_qty;
+
+        const amount: number = remainAskOrderAmount >= remainOrderAmount ? remainOrderAmount : remainAskOrderAmount;
+
+        await updateUserBalances({
+          user_id: order.user_id,
+          deal_user_id: askOrder.user_id,
+          exchange_id: order.exchange_id,
+          exchange_name: order.exchange_name,
+          order_id: order.id,
+          deal_order_id: askOrder.id,
+          stock: order.stock,
+          money: order.money,
+          side: order.side,
+          price: askOrder.price,
+          amount,
+          total: amount * askOrder.price,
+        });
 
         if (remainAskOrderAmount >= remainOrderAmount) {
           const price = remainOrderAmount * askOrder.price / order.amount;
@@ -471,9 +540,6 @@ class OrderService {
       create_time,
       update_time: update_time === 'infinity' ? getCurrentTimestamp() : update_time
     };
-    console.log(order);
-
-    await db.appendOrderHistory(order);
 
     let dealOrderList: Order[] = [];
     if (side === OrderSide.ASK) {
@@ -481,6 +547,8 @@ class OrderService {
     } else {
       dealOrderList = await this.executeBidLimitOrder(order);
     }
+
+    await db.appendOrderHistory(order);
 
     if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
       for (const dealOrder of dealOrderList) {
@@ -550,8 +618,6 @@ class OrderService {
       return { message: 'There are not enought liquidity!' };
     }
 
-    await db.appendOrderHistory(order);
-
     let executedResult: { dealOrderList: Order[], order: Order };
 
     if (side === OrderSide.ASK) {
@@ -559,6 +625,8 @@ class OrderService {
     } else {
       executedResult = await this.executeBidMarketOrder(order);
     }
+
+    await db.appendOrderHistory(order);
 
     const { dealOrderList, order: executedOrder } = executedResult;
 
