@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import config from '../config/matchengine.config';
 import db from '../database/queries';
+import { client } from '../config/database.config';
 import { getCurrentTimestamp } from '../utils/time.util';
 import kafkaProducer from '../kafka/kafka.producer';
 import { Market, Order, Deal, MatchEngineConfig } from '../typings/types';
@@ -8,7 +9,6 @@ import AwaitLock from 'await-lock';
 import {
   appendOrderDeal,
   getAllPending,
-  updateUserBalances,
   updateOrderHistory,
 } from '../utils/trade.util';
 import {
@@ -28,7 +28,6 @@ import { PendingDetailParams } from '../dto/pending-detail-params.dto';
 import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 
-import redisClient from '../config/database.config';
 import { getAssetConfigByName } from '../utils/config.util';
 import { getAssetUsdPrice } from '../utils/price.util';
 
@@ -60,21 +59,32 @@ class OrderService {
   }
 
   async initOrderBook() {
-    for (const market of this.marketList) {
-      const { name } = market;
-      const askIds = await redisClient.lRange(`${name}:asks`, 0, -1)
-      const bidIds = await redisClient.lRange(`${name}:bids`, 0, -1)
+    const ordersList: Order[] = await db.getActiveOrders();
 
-      for (const id of askIds) {
-        this.addAskOrder(JSON.parse(await redisClient.get(`${name}:asks:${id}`)));
-      }
-
-      for (const id of bidIds) {
-        this.addBidOrder(JSON.parse(await redisClient.get(`${name}:bids:${id}`)));
+    for (const order of ordersList) {
+      switch (order.side) {
+        case OrderSide.ASK:
+          this.addAskOrder(order);
+          break;
+        case OrderSide.BID:
+          this.addBidOrder(order);
+          break;
       }
     }
 
     return this;
+  }
+
+  clearOrderBook() {
+    for (const market of this.marketList) {
+      market.asks = [];
+      market.bids = [];
+    }
+  }
+
+  async refreshOrderBook() {
+    this.clearOrderBook();
+    await this.initOrderBook();
   }
 
   getMarketByName(marketName: string): Market {
@@ -134,7 +144,7 @@ class OrderService {
 
       if (n !== 0 && bids[n - 1].price >= order.price) {
         for (let i = n - 1; i >= 0; i--) {
-          let bidOrder = bids[i];
+          let bidOrder: Order = bids[i];
 
           if (bidOrder.price < order.price) {
             break;
@@ -142,23 +152,6 @@ class OrderService {
 
           let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
           let remainOrderAmount: number = order.amount - order.filled_qty;
-
-          const amount: number = remainBidOrderAmount >= remainOrderAmount ? remainOrderAmount : remainBidOrderAmount
-
-          await updateUserBalances({
-            user_id: order.user_id,
-            deal_user_id: bidOrder.user_id,
-            exchange_id: order.exchange_id,
-            exchange_name: order.exchange_name,
-            order_id: order.id,
-            deal_order_id: bidOrder.id,
-            stock: order.stock,
-            money: order.money,
-            side: order.side,
-            price: bidOrder.price,
-            amount,
-            total: amount * bidOrder.price,
-          });
 
           if (remainBidOrderAmount >= remainOrderAmount) {
             order.filled_qty += remainOrderAmount;
@@ -225,7 +218,7 @@ class OrderService {
 
       if (n !== 0 && asks[n - 1].price <= order.price) {
         for (let i = n - 1; i >= 0; i--) {
-          let askOrder = asks[i];
+          let askOrder: Order = asks[i];
 
           if (askOrder.price > order.price) {
             break;
@@ -233,23 +226,6 @@ class OrderService {
 
           let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
           let remainOrderAmount: number = order.amount - order.filled_qty;
-
-          const amount: number = remainAskOrderAmount >= remainOrderAmount ? remainOrderAmount : remainAskOrderAmount;
-
-          await updateUserBalances({
-            user_id: order.user_id,
-            deal_user_id: askOrder.user_id,
-            exchange_id: order.exchange_id,
-            exchange_name: order.exchange_name,
-            order_id: order.id,
-            deal_order_id: askOrder.id,
-            stock: order.stock,
-            money: order.money,
-            side: order.side,
-            price: askOrder.price,
-            amount,
-            total: amount * askOrder.price,
-          });
 
           if (remainAskOrderAmount >= remainOrderAmount) {
             order.filled_qty += remainOrderAmount;
@@ -321,23 +297,6 @@ class OrderService {
         let bidOrder = bids[i];
         let remainBidOrderAmount: number = bidOrder.amount - bidOrder.filled_qty;
         let remainOrderAmount: number = order.amount - order.filled_qty;
-
-        const amount: number = remainBidOrderAmount >= remainOrderAmount ? remainOrderAmount : remainBidOrderAmount
-
-        await updateUserBalances({
-          user_id: order.user_id,
-          deal_user_id: bidOrder.user_id,
-          exchange_id: order.exchange_id,
-          exchange_name: order.exchange_name,
-          order_id: order.id,
-          deal_order_id: bidOrder.id,
-          stock: order.stock,
-          money: order.money,
-          side: order.side,
-          price: bidOrder.price,
-          amount,
-          total: amount * bidOrder.price,
-        });
 
         if (remainBidOrderAmount >= remainOrderAmount) {
           const price = remainOrderAmount * bidOrder.price / order.amount;
@@ -417,23 +376,6 @@ class OrderService {
         let remainAskOrderAmount: number = askOrder.amount - askOrder.filled_qty;
         let remainOrderAmount: number = order.amount - order.filled_qty;
 
-        const amount: number = remainAskOrderAmount >= remainOrderAmount ? remainOrderAmount : remainAskOrderAmount;
-
-        await updateUserBalances({
-          user_id: order.user_id,
-          deal_user_id: askOrder.user_id,
-          exchange_id: order.exchange_id,
-          exchange_name: order.exchange_name,
-          order_id: order.id,
-          deal_order_id: askOrder.id,
-          stock: order.stock,
-          money: order.money,
-          side: order.side,
-          price: askOrder.price,
-          amount,
-          total: amount * askOrder.price,
-        });
-
         if (remainAskOrderAmount >= remainOrderAmount) {
           const price = remainOrderAmount * askOrder.price / order.amount;
           const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
@@ -510,72 +452,85 @@ class OrderService {
     total_fee,
     create_time,
     update_time
-  }: PutLimitParams): Promise<Order> {
-    const precision = 10 ** getAssetConfigByName(stock).prec;
-    const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
-    const total = amount * pricePrec;
-    create_time = create_time || getCurrentTimestamp();
-    update_time = update_time || getCurrentTimestamp();
+  }: PutLimitParams): Promise<Deal[] | Order> {
+    try {
+      await client.query('BEGIN');
+      const precision = 10 ** getAssetConfigByName(stock).prec;
+      const pricePrec = Math.round((price + Number.EPSILON) * precision) / precision;
+      const total = amount * pricePrec;
+      create_time = create_time || getCurrentTimestamp();
+      update_time = update_time || getCurrentTimestamp();
 
-    const order: Order = {
-      id: uuidv4(),
-      exchange_id,
-      exchange_name,
-      user_id,
-      type: OrderType.LIMIT,
-      side,
-      market,
-      stock,
-      money,
-      price: pricePrec,
-      amount,
-      filled_qty: 0,
-      change_qty: 0,
-      total,
-      executed_total: 0,
-      status: OrderStatus.ACTIVE,
-      total_fee,
-      deal_money: side === OrderSide.ASK ? total - total_fee : total,
-      deal_stock: side === OrderSide.BID ? amount - total_fee : amount,
-      create_time,
-      update_time: update_time === 'infinity' ? getCurrentTimestamp() : update_time
-    };
+      const order: Order = {
+        id: uuidv4(),
+        exchange_id,
+        exchange_name,
+        user_id,
+        type: OrderType.LIMIT,
+        side,
+        market,
+        stock,
+        money,
+        price: pricePrec,
+        amount,
+        filled_qty: 0,
+        change_qty: 0,
+        total,
+        executed_total: 0,
+        status: OrderStatus.ACTIVE,
+        total_fee,
+        deal_money: side === OrderSide.ASK ? total - total_fee : total,
+        deal_stock: side === OrderSide.BID ? amount - total_fee : amount,
+        create_time,
+        update_time: update_time === 'infinity' ? getCurrentTimestamp() : update_time
+      };
 
-    let dealOrderList: Order[] = [];
-    if (side === OrderSide.ASK) {
-      dealOrderList = await this.executeAskLimitOrder(order);
-    } else {
-      dealOrderList = await this.executeBidLimitOrder(order);
-    }
+      await db.appendOrderHistory(order);
 
-    await db.appendOrderHistory(order);
-
-    if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
-      for (const dealOrder of dealOrderList) {
-        const updateTime = update_time === 'infinity' ? getCurrentTimestamp() : update_time;
-
-        order.update_time = updateTime;
-        dealOrder.update_time = updateTime;
-
-        db.updateOrder(order);
-        db.updateOrder(dealOrder);
-
-        const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
-
-        await kafkaProducer.pushMessage(
-          KafkaTopic.DEALS,
-          OrderEvent.FINISH,
-          firstDeal
-        );
-
-        this.settleBookSize++;
+      let dealOrderList: Order[] = [];
+      if (side === OrderSide.ASK) {
+        dealOrderList = await this.executeAskLimitOrder(order);
+      } else {
+        dealOrderList = await this.executeBidLimitOrder(order);
       }
 
-      return order;
-    }
+      if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
+        const dealsList: Deal[] = [];
 
-    await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PUT, order);
-    return order;
+        for (const dealOrder of dealOrderList) {
+          const updateTime = update_time === 'infinity' ? getCurrentTimestamp() : update_time;
+
+          order.update_time = updateTime;
+          dealOrder.update_time = updateTime;
+
+          db.updateOrder(order);
+          db.updateOrder(dealOrder);
+
+          const [firstDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
+          dealsList.push(firstDeal);
+
+          await kafkaProducer.pushMessage(
+            KafkaTopic.DEALS,
+            OrderEvent.FINISH,
+            firstDeal
+          );
+
+          this.settleBookSize++;
+        }
+
+        await client.query('COMMIT');
+        return dealsList;
+      }
+
+
+      await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PUT, order);
+      await client.query('COMMIT');
+      return [];
+    } catch (err) {
+      console.log(err);
+      await client.query('ROLLBACK');
+      this.refreshOrderBook();
+    }
   }
 
   async putMarket({
@@ -591,103 +546,121 @@ class OrderService {
     create_time,
     update_time
   }: PutMarketParams) {
-    const order: Order = {
-      id: uuidv4(),
-      exchange_id,
-      exchange_name,
-      user_id,
-      type: OrderType.MARKET,
-      side,
-      market,
-      stock,
-      money,
-      status: OrderStatus.COMPLETED,
-      price: 0,
-      amount,
-      filled_qty: 0,
-      total: 0,
-      executed_total: 0,
-      total_fee,
-      deal_money: 0,
-      deal_stock: side === OrderSide.BID ? amount - total_fee : amount,
-      create_time: create_time || getCurrentTimestamp(),
-      update_time: update_time || 'infinity',
-    };
+    try {
+      await client.query('BEGIN');
+      const order: Order = {
+        id: uuidv4(),
+        exchange_id,
+        exchange_name,
+        user_id,
+        type: OrderType.MARKET,
+        side,
+        market,
+        stock,
+        money,
+        status: OrderStatus.COMPLETED,
+        price: 0,
+        amount,
+        filled_qty: 0,
+        total: 0,
+        executed_total: 0,
+        total_fee,
+        deal_money: 0,
+        deal_stock: side === OrderSide.BID ? amount - total_fee : amount,
+        create_time: create_time || getCurrentTimestamp(),
+        update_time: update_time || 'infinity',
+      };
 
-    if (!this.isEnoughtLiquidity(order)) {
-      return { message: 'There are not enought liquidity!' };
-    }
-
-    let executedResult: { dealOrderList: Order[], order: Order };
-
-    if (side === OrderSide.ASK) {
-      executedResult = await this.executeAskMarketOrder(order);
-    } else {
-      executedResult = await this.executeBidMarketOrder(order);
-    }
-
-    await db.appendOrderHistory(order);
-
-    const { dealOrderList, order: executedOrder } = executedResult;
-
-    if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
-      order.price = executedOrder.price;
-      order.total = executedOrder.total;
-      order.executed_total = executedOrder.executed_total;
-      order.filled_qty = executedOrder.filled_qty;
-      order.status = executedOrder.status;
-
-      for (let i = 0; i < dealOrderList.length; i++) {
-        const dealOrder = dealOrderList[i];
-        order.update_time = update_time === 'infinity' ? getCurrentTimestamp() : update_time;
-
-        order.deal_stock = dealOrder.price;
-        const [firstDeal, secondDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
-
-        await kafkaProducer.pushMessage(
-          KafkaTopic.DEALS,
-          OrderEvent.FINISH,
-          firstDeal
-        );
-
-        order.status = OrderStatus.COMPLETED;
-        dealOrder.status = OrderStatus.COMPLETED;
-        await updateOrderHistory(order, dealOrder);
-        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
-
-        this.settleBookSize++;
+      if (!this.isEnoughtLiquidity(order)) {
+        return { message: 'There are not enought liquidity!' };
       }
-      return order;
-    }
 
-    return { message: 'Order book is empty' };
+      let executedResult: { dealOrderList: Order[], order: Order };
+
+      if (side === OrderSide.ASK) {
+        executedResult = await this.executeAskMarketOrder(order);
+      } else {
+        executedResult = await this.executeBidMarketOrder(order);
+      }
+
+      await db.appendOrderHistory(order);
+
+      const { dealOrderList, order: executedOrder } = executedResult;
+
+      if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
+        const dealsList: Deal[] = [];
+        order.price = executedOrder.price;
+        order.total = executedOrder.total;
+        order.executed_total = executedOrder.executed_total;
+        order.filled_qty = executedOrder.filled_qty;
+        order.status = executedOrder.status;
+
+        for (let i = 0; i < dealOrderList.length; i++) {
+          const dealOrder = dealOrderList[i];
+          order.update_time = getCurrentTimestamp();
+
+          order.deal_stock = dealOrder.price;
+          
+          const [firstDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
+          dealsList.push(firstDeal);
+
+          await kafkaProducer.pushMessage(
+            KafkaTopic.DEALS,
+            OrderEvent.FINISH,
+            firstDeal
+          );
+
+          order.status = OrderStatus.COMPLETED;
+          dealOrder.status = OrderStatus.COMPLETED;
+          await updateOrderHistory(order, dealOrder);
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
+
+          this.settleBookSize++;
+        }
+
+        await client.query('COMMIT');
+        return dealsList;
+      }
+
+      await client.query('COMMIT');
+      return { message: 'Order book is empty' };
+    } catch (err) {
+      console.log(err);
+      await client.query('ROLLBACK');
+      this.refreshOrderBook();
+    }
   }
 
   async cancel({ user_id, market, order_id, side }: CancelParams) {
-    const removeOrder = async (user_id, order_id, orderbook): Promise<Order | void> => {
-      let orderIndex: number = orderbook.findIndex(
-        (order) =>
-          order.id.toLowerCase() === order_id.toLowerCase()
-          && order.user_id.toLowerCase() === user_id.toLowerCase()
-      );
+    await this.lock.acquireAsync();
+    try {
+      const removeOrder = async (user_id, order_id, orderbook): Promise<Order | void> => {
+        let orderIndex: number = orderbook.findIndex(
+          (order) =>
+            order.id.toLowerCase() === order_id.toLowerCase()
+            && order.user_id.toLowerCase() === user_id.toLowerCase()
+        );
 
-      if (orderIndex >= 0) {
-        const [order] = orderbook.splice(orderIndex, 1);
+        if (orderIndex >= 0) {
+          const [order] = orderbook.splice(orderIndex, 1);
 
-        order.status = order.filled_qty > 0 ? OrderStatus.PARTIALLY_CANCELED : OrderStatus.CANCELED;
-        order.update_time = getCurrentTimestamp();
-        db.updateOrder(order);
-        await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL, order);
-        return order;
+          order.status = order.filled_qty > 0 ? OrderStatus.PARTIALLY_CANCELED : OrderStatus.CANCELED;
+          order.update_time = getCurrentTimestamp();
+          db.updateOrder(order);
+          await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.CANCEL, order);
+          return order;
+        }
+      };
+
+      const { asks, bids }: Market = this.getMarketByName(market);
+
+      if (side === OrderSide.ASK) {
+        return await removeOrder(user_id, order_id, asks);
       }
-    };
-
-    const { asks, bids }: Market = this.getMarketByName(market);
-
-    if (side === OrderSide.ASK) {
-      return await removeOrder(user_id, order_id, asks);
+      return await removeOrder(user_id, order_id, bids);
+    } finally {
+      this.lock.release();
     }
-    return await removeOrder(user_id, order_id, bids);
   }
 
   book({ market, side, limit, offset }: OrderBookParams): any {

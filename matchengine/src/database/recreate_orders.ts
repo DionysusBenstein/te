@@ -1,4 +1,4 @@
-import { pool } from '../config/database.config';
+import { client } from '../config/database.config';
 import { QueryResult } from 'pg';
 import orderController from "../controllers/order.controller";
 
@@ -54,7 +54,7 @@ const putOrders = async (ordersList) => {
 export const recreateOrders = async ({ stage }) => {
   if (stage === 'cancel') {
     // --- stage 1 ---
-    const response: QueryResult = await pool.query(`
+    const response: QueryResult = await client.query(`
     DROP TABLE debug_closed_orders;
     CREATE TABLE debug_closed_orders AS 
     select *
@@ -63,7 +63,7 @@ export const recreateOrders = async ({ stage }) => {
   `);
 
     const queryString: string = `select * from debug_closed_orders`;
-    const { rows }: QueryResult = await pool.query(queryString);
+    const { rows }: QueryResult = await client.query(queryString);
 
     await cancelOrders(rows);
   }
@@ -71,7 +71,7 @@ export const recreateOrders = async ({ stage }) => {
   if (stage === 'place') {
     // --- stage 2 ---
     const queryString: string = `select * from debug_closed_orders`;
-    const { rows }: QueryResult = await pool.query(queryString);
+    const { rows }: QueryResult = await client.query(queryString);
     await putOrders(rows);
   }
 };

@@ -6,7 +6,7 @@ import { PendingDetailParams } from '../dto/pending-detail-params.dto';
 import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 import { validateAndConvert } from '../utils/validation.util';
-import { Order } from '../typings/types';
+import { Deal } from '../typings/types';
 import plainOrderService from '../services/order.service';
 
 class OrderController {
@@ -30,11 +30,11 @@ class OrderController {
         };
       }
 
-      const order: Order = await this.orderService.putLimit(data);
+      const dealsList: Deal[] = await this.orderService.putLimit(data);
 
       return {
         status: 'ok',
-        order
+        dealsList
       }
     } catch (error) {
       return {
@@ -55,11 +55,11 @@ class OrderController {
         };
       }
 
-      const order: any = await this.orderService.putMarket(data);
+      const dealsList: Deal[] = await this.orderService.putMarket(data);
 
       return {
         status: 'ok',
-        order
+        dealsList
       }
     } catch (error) {
       return {

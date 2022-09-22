@@ -1,8 +1,8 @@
-import { Pool } from 'pg';
+import pg, { Client } from 'pg';
 import { createClient } from 'redis';
 import { Sequelize } from 'sequelize';
 
-export const pool = new Pool({
+export const client = new Client({
   user: 'postgres',
   host: 'postgres',
   database: 'trade_history',
@@ -10,16 +10,26 @@ export const pool = new Pool({
   port: 5432
 });
 
-export const client = createClient({
+client.connect();
+
+pg.types.setTypeParser(pg.types.builtins.FLOAT8, (value: string) => {
+    return parseFloat(value);
+});
+
+pg.types.setTypeParser(pg.types.builtins.NUMERIC, (value: string) => {
+    return parseFloat(value);
+});
+
+export const redisClient = createClient({
   url: 'redis://redis:6379',
   // retry_strategy: () => {
   //   return 10000 // time in milliseconds from this https://stackoverflow.com/questions/58505318/how-to-reconnect-redis-connection-after-some-give-time
   // }
 });
 
-client.on('error', (err) => console.log('Redis Client Error', err));
+redisClient.on('error', (err) => console.log('Redis Client Error', err));
 try {
-  client.connect();
+  redisClient.connect();
   console.log('✅ Connected to Redis');
 } catch (err) {
   console.log(err);
@@ -53,4 +63,4 @@ try {
   console.log(err);
 }
 
-export default client;
+export default redisClient;
