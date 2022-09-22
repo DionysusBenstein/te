@@ -18,11 +18,6 @@ const io = new Server(server, {
   }
 });
 
-// const rateLimiter = new RateLimiterMemory({
-//   points: 50,
-//   duration: 0.1,
-// });
-
 const rateLimiter = new RateLimiterMemory({
   points: 50,
   duration: 1,
@@ -58,10 +53,9 @@ async function handleMessage(rawData: any) {
     const { method, params } = rawData;
 
     if (method && params) {
-      const rateLimiterRes = await rateLimiter.consume(this.id);
+      await rateLimiter.consume(this.id);
       const [route, name] = method.split('.');
       const eventName = name === 'query' ? method : 'message';
-      console.log('::::::: eventName', method, ':', rateLimiterRes);
       
       return this.emit(eventName, JSON.stringify(await collapsedMethods[method](params, this, io)));
     }
