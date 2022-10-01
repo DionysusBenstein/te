@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import config from '../config/matchengine.config';
 import db from '../database/queries';
 import { client } from '../config/database.config';
-import { getCurrentTimestamp } from '../utils/time.util';
+import { getCurrentTimestamp, getMilliseconds } from '../utils/time.util';
 import kafkaProducer from '../kafka/kafka.producer';
 import { Market, Order, Deal, MatchEngineConfig } from '../typings/types';
 import AwaitLock from 'await-lock';
@@ -88,7 +88,13 @@ class OrderService {
   }
 
   getMarketByName(marketName: string): Market {
-    return this.marketList.find((market) => market.name === marketName);
+    const market = this.marketList.find((market) => market.name === marketName);
+
+    if (!market) {
+      throw Error(`Market '${marketName}' not found`);
+    }
+
+    return market; 
   }
 
   isEnoughtLiquidity({ amount, side, market }: Order) {
@@ -105,34 +111,23 @@ class OrderService {
 
   addAskOrder(order: Order) {
     if (!order) return;
-    const { asks }: Market = this.getMarketByName(order.market);
+    let { asks }: Market = this.getMarketByName(order.market);
     asks.push(order);
 
-    let i = asks.length - 1;
-    const ask = asks[i];
-
-    while (i > 0 && ask.price > asks[i - 1].price) {
-      asks[i] = asks[i - 1];
-      i -= 1;
-    }
-
-    asks[i] = ask;
+    asks.sort((a, b) => 
+      b.price - a.price || getMilliseconds(b.create_time) - getMilliseconds(a.create_time)
+    );
   }
+
 
   addBidOrder(order: Order) {
     if (!order) return;
-    const { bids }: Market = this.getMarketByName(order.market);
+    let { bids }: Market = this.getMarketByName(order.market);
     bids.push(order);
 
-    let i = bids.length - 1;
-    const bid = bids[i];
-
-    while (i > 0 && bid.price < bids[i - 1].price) {
-      bids[i] = bids[i - 1];
-      i -= 1;
-    }
-
-    bids[i] = bid;
+    bids.sort((a, b) => 
+      a.price - b.price || getMilliseconds(b.create_time) - getMilliseconds(a.create_time)
+    );
   }
 
   async executeAskLimitOrder(order: Order) {
@@ -163,20 +158,21 @@ class OrderService {
 
             if (bidOrder.amount <= bidOrder.filled_qty) {
               bidOrder.status = OrderStatus.COMPLETED;
+              order.status = OrderStatus.COMPLETED;
+              await updateOrderHistory(order, bidOrder);
               const [dealOrder] = bids.splice(i, 1);
               dealOrderList.push(dealOrder);
               await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
             } else {
               bidOrder.status = OrderStatus.PARTIALLY;
+              order.status = OrderStatus.COMPLETED;
+              await updateOrderHistory(order, bidOrder);
               const [dealOrder] = bids.slice(i, i + 1);
               dealOrderList.push(dealOrder);
               await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
             }
 
-            order.status = OrderStatus.COMPLETED;
-
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
-            await updateOrderHistory(order, bidOrder);
             return dealOrderList;
           }
 
@@ -237,20 +233,21 @@ class OrderService {
 
             if (askOrder.amount <= askOrder.filled_qty) {
               askOrder.status = OrderStatus.COMPLETED;
+              order.status = OrderStatus.COMPLETED;
+              await updateOrderHistory(order, askOrder);
               const [dealOrder] = asks.splice(i, 1);
               dealOrderList.push(dealOrder);
               await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
             } else {
               askOrder.status = OrderStatus.PARTIALLY;
+              order.status = OrderStatus.COMPLETED;
+              await updateOrderHistory(order, askOrder);
               const [dealOrder] = asks.slice(i, i + 1);
               dealOrderList.push(dealOrder)
               await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, askOrder);
             }
 
-            order.status = OrderStatus.COMPLETED;
-            await updateOrderHistory(order, askOrder);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
-
             return dealOrderList;
           }
 
@@ -312,20 +309,21 @@ class OrderService {
 
           if (bidOrder.amount <= bidOrder.filled_qty) {
             bidOrder.status = OrderStatus.COMPLETED;
+            order.status = OrderStatus.COMPLETED;
+            await updateOrderHistory(order, bidOrder);
             const [dealOrder] = bids.splice(i, 1);
             dealOrderList.push(dealOrder);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, bidOrder);
           } else {
             bidOrder.status = OrderStatus.PARTIALLY;
+            order.status = OrderStatus.COMPLETED;
+            await updateOrderHistory(order, bidOrder);
             const [dealOrder] = bids.slice(i, i + 1);
             dealOrderList.push(dealOrder);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, bidOrder);
           }
 
-          order.status = OrderStatus.COMPLETED;
-
           await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
-          await updateOrderHistory(order, bidOrder);
           return { dealOrderList, order };
         }
 
@@ -390,20 +388,21 @@ class OrderService {
 
           if (askOrder.amount <= askOrder.filled_qty) {
             askOrder.status = OrderStatus.COMPLETED;
+            order.status = OrderStatus.COMPLETED;
+            await updateOrderHistory(order, askOrder);
             const [dealOrder] = asks.splice(i, 1);
             dealOrderList.push(dealOrder);
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
           } else {
             askOrder.status = OrderStatus.PARTIALLY;
+            order.status = OrderStatus.COMPLETED;
+            await updateOrderHistory(order, askOrder);
             const [dealOrder] = asks.slice(i, i + 1);
             dealOrderList.push(dealOrder)
             await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PARTIALLY_FINISH, askOrder);
           }
 
-          order.status = OrderStatus.COMPLETED;
-          await updateOrderHistory(order, askOrder);
           await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.FINISH, order);
-
           return { dealOrderList, order };
         }
 
@@ -494,10 +493,14 @@ class OrderService {
         dealOrderList = await this.executeBidLimitOrder(order);
       }
 
-      if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
+      if (dealOrderList && dealOrderList.length > 0) {
         const dealsList: Deal[] = [];
 
         for (const dealOrder of dealOrderList) {
+          if (!dealOrder) {
+            throw Error(`dealOrderList contains undefined: ${JSON.stringify(dealOrderList, null, 2)}`)
+          };
+
           const updateTime = update_time === 'infinity' ? getCurrentTimestamp() : update_time;
 
           order.update_time = updateTime;
@@ -521,7 +524,6 @@ class OrderService {
         await client.query('COMMIT');
         return dealsList;
       }
-
 
       await kafkaProducer.pushMessage(KafkaTopic.ORDERS, OrderEvent.PUT, order);
       await client.query('COMMIT');
@@ -587,7 +589,7 @@ class OrderService {
 
       const { dealOrderList, order: executedOrder } = executedResult;
 
-      if (dealOrderList && dealOrderList.length > 0 && !dealOrderList.includes(undefined)) {
+      if (dealOrderList && dealOrderList.length > 0) {
         const dealsList: Deal[] = [];
         order.price = executedOrder.price;
         order.total = executedOrder.total;
@@ -597,8 +599,12 @@ class OrderService {
 
         for (let i = 0; i < dealOrderList.length; i++) {
           const dealOrder = dealOrderList[i];
-          order.update_time = getCurrentTimestamp();
 
+          if (!dealOrder) {
+            throw Error(`dealOrderList contains undefined: ${JSON.stringify(dealOrderList, null, 2)}`)
+          };
+
+          order.update_time = getCurrentTimestamp();
           order.deal_stock = dealOrder.price;
           
           const [firstDeal]: Deal[] = await appendOrderDeal(order, dealOrder);
