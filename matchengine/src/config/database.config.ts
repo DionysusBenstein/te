@@ -1,5 +1,4 @@
 import pg, { Client } from 'pg';
-import { createClient } from 'redis';
 import { Sequelize } from 'sequelize';
 
 export const client = new Client({
@@ -19,21 +18,6 @@ pg.types.setTypeParser(pg.types.builtins.FLOAT8, (value: string) => {
 pg.types.setTypeParser(pg.types.builtins.NUMERIC, (value: string) => {
     return parseFloat(value);
 });
-
-export const redisClient = createClient({
-  url: 'redis://redis:6379',
-  // retry_strategy: () => {
-  //   return 10000 // time in milliseconds from this https://stackoverflow.com/questions/58505318/how-to-reconnect-redis-connection-after-some-give-time
-  // }
-});
-
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
-try {
-  redisClient.connect();
-  console.log('✅ Connected to Redis');
-} catch (err) {
-  console.log(err);
-}
 
 export const sequelize = new Sequelize('globiance_prod', 'globiance_prod', '!G05unL1v3Pl5%', {
   host: "192.168.1.1",
@@ -62,5 +46,3 @@ try {
 } catch (err) {
   console.log(err);
 }
-
-export default redisClient;
