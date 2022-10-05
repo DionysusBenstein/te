@@ -4,6 +4,7 @@ import { Deal, Market, Order } from '../typings/types';
 import { MarketRole, BusinessEnum } from '../typings/enums';
 import { getCurrentTimestamp } from './time.util';
 import { getAssetUsdPrice } from './price.util';
+import axios from 'axios';
 
 export function getAllPending(marketList: Market[], user_id: string) {
   let userOrders: Order[];
@@ -25,7 +26,7 @@ export function getAllPending(marketList: Market[], user_id: string) {
 export async function updateOrderHistory(
   order: Order,
   dealOrder: Order
-): Promise<void> {  
+): Promise<void> {
   const updateTime = getCurrentTimestamp();
   order.update_time = updateTime;
   dealOrder.update_time = updateTime;
@@ -52,7 +53,7 @@ export async function appendOrderDeal(
     money: order.money,
     role: MarketRole.TAKER,
     price: dealOrder.price,
-    amount: order.change_qty, 
+    amount: order.change_qty,
     total: order.change_qty * dealOrder.price,
     deal: 1,
     fee: 1,
@@ -76,7 +77,7 @@ export async function appendOrderDeal(
     money: dealOrder.money,
     role: MarketRole.MAKER,
     price: dealOrder.price,
-    amount: order.change_qty, 
+    amount: order.change_qty,
     total: order.change_qty * dealOrder.price,
     deal: 1,
     fee: 1,
@@ -110,4 +111,17 @@ export async function appendTradeBalance(
     balance: newBalance,
     detail: '',
   });
+}
+
+export async function updateUserBalances(dealInfo: any) {
+  const { API_URL } = process.env;
+  const res = await axios.post(`${API_URL}/balance/webhook`, dealInfo);
+
+  if(res.data.statusCode !== 200) {
+    const errorMessage: string = `Balance update error: ${res.data.message}`
+    console.log(errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  return res.data;
 }

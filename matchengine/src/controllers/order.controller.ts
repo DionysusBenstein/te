@@ -6,7 +6,7 @@ import { PendingDetailParams } from '../dto/pending-detail-params.dto';
 import { CancelParams } from '../dto/cancel-params.dto';
 import { DepthParams } from '../dto/depth-params.dto';
 import { validateAndConvert } from '../utils/validation.util';
-import { Order } from '../typings/types';
+import { Deal } from '../typings/types';
 import plainOrderService from '../services/order.service';
 
 class OrderController {
@@ -20,38 +20,52 @@ class OrderController {
   }
 
   async putLimit(params: PutLimitParams) {
-    const { data, errors } = await validateAndConvert(PutLimitParams, params);
+    try {
+      const { data, errors } = await validateAndConvert(PutLimitParams, params);
 
-    if (errors) {
+      if (errors) {
+        return {
+          errors,
+          message: 'Invalid params!',
+        };
+      }
+
+      const dealsList: Deal[] = await this.orderService.putLimit(data);
+
       return {
-        errors,
-        message: 'Invalid params!',
-      };
-    }
-
-    const order: Order = await this.orderService.putLimit(data);
-
-    return {
-      status: 'ok',
-      order
+        status: 'ok',
+        dealsList
+      }
+    } catch (error) {
+      return {
+        status: 'error',
+        message: error.message
+      }
     }
   }
 
   async putMarket(params: PutMarketParams) {
-    const { data, errors } = await validateAndConvert(PutMarketParams, params);
+    try {
+      const { data, errors } = await validateAndConvert(PutMarketParams, params);
 
-    if (errors) {
+      if (errors) {
+        return {
+          errors,
+          message: 'Invalid params!',
+        };
+      }
+
+      const dealsList: Deal[] = await this.orderService.putMarket(data);
+
       return {
-        errors,
-        message: 'Invalid params!',
-      };
-    }
-
-    const order: any = await this.orderService.putMarket(data);
-
-    return {
-      status: 'ok',
-      order
+        status: 'ok',
+        dealsList
+      }
+    } catch (error) {
+      return {
+        status: 'error',
+        message: error.message
+      }
     }
   }
 

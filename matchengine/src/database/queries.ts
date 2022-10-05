@@ -1,7 +1,8 @@
-import { pool } from '../config/database.config';
+import { client } from '../config/database.config';
 import { QueryResult } from 'pg';
 import { Order, Deal, Balance } from '../typings/types';
 import { v4 as uuidv4 } from 'uuid';
+import { OrderStatus } from '../typings/enums';
 
 class Queries {
   async appendOrderHistory({
@@ -76,7 +77,7 @@ class Queries {
             1
           )`;
 
-      const response: QueryResult = await pool.query(queryString);
+      const response: QueryResult = await client.query(queryString);
 
       return response;
     } catch (err) {
@@ -143,7 +144,7 @@ class Queries {
             '${time}'
           )`;
 
-      const response: QueryResult = await pool.query(queryString);
+      const response: QueryResult = await client.query(queryString);
 
       return response;
     } catch (err) {
@@ -164,7 +165,7 @@ class Queries {
         WHERE id = '${id}'
       ;`;
 
-      const response: QueryResult = await pool.query(queryString);
+      const response: QueryResult = await client.query(queryString);
 
       return response;
     } catch (err) {
@@ -187,9 +188,25 @@ class Queries {
         WHERE id = '${order.id}'
       ;`;
 
-      const response: QueryResult = await pool.query(queryString);
+      const response: QueryResult = await client.query(queryString);
 
       return response;
+    } catch (err) {
+      console.log(err);
+      return err;
+    }
+  }
+
+  async getActiveOrders(): Promise<Order[]> {
+    try {
+      const queryString: string = `
+        SELECT * from order_history
+        WHERE status in ('${OrderStatus.ACTIVE}', '${OrderStatus.PARTIALLY}');
+      ;`;
+
+      const response: QueryResult = await client.query(queryString);
+
+      return response.rows;
     } catch (err) {
       console.log(err);
       return err;
@@ -201,7 +218,7 @@ class Queries {
     assets: string[]
   ): Promise<Balance[]> {
     try {
-      const response: QueryResult = await pool.query(
+      const response: QueryResult = await client.query(
         'SELECT * FROM balance_history WHERE ($1::uuid IS NULL OR user_id=$1) AND asset = ANY($2)',
         [user_id, [...assets]]
       );
@@ -215,7 +232,7 @@ class Queries {
 
   async getLastBalance(user_id: string, assets: string[]): Promise<Balance> {
     try {
-      const response: QueryResult = await pool.query(
+      const response: QueryResult = await client.query(
         'SELECT * FROM balance_history WHERE user_id = $1 AND asset = ANY($2) ORDER BY time DESC LIMIT 1',
         [user_id, assets]
       );
@@ -242,7 +259,7 @@ class Queries {
           VALUES ('${uuidv4()}', '${user_id}', '${time}', '${asset}', '${business}', ${change}, ${balance}, '${detail}');
       `;
 
-      const response: QueryResult = await pool.query(queryString);
+      const response: QueryResult = await client.query(queryString);
       return response;
     } catch (err) {
       console.log(err);
@@ -257,7 +274,7 @@ class Queries {
         VALUES ($1, $2, $3, $4)
       `;
 
-      pool.query(queryString, [deal_id, api_error, error, time])
+      client.query(queryString, [deal_id, api_error, error, time])
     } catch (err) {
       console.log(err);
     }
@@ -271,7 +288,7 @@ class Queries {
         WHERE id = $1
       `;
 
-      const response = await pool.query(queryString, [id]);
+      const response = await client.query(queryString, [id]);
       return { deal: response.rows[0] };
     } catch (err) {
       console.log(err);
