@@ -74,7 +74,7 @@ class Queries {
             ${total_fee},
             '${create_time}',
             '${update_time}',
-            1
+            2
           )`;
 
       const response: QueryResult = await client.query(queryString);
